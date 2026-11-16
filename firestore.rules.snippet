@@ -1,8 +1,5 @@
-// 商圈精耕系統（sqfarm）— 貼到 Firebase 主控台 → Firestore Database → 規則
-// 放在既有的 match /databases/{database}/documents { ... } 裡面，與 RE-CMS 原有規則並列即可
-    match /sqfarm/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-      match /{sub=**} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
-      }
+// 商圈精耕系統（sqfarm）— 加在 Firestore 規則的 match /databases/{database}/documents { ... } 內
+// 依賴 RE-CMS 規則中既有的 signedIn()、isAllowedUser() 函式
+    match /sqfarm/{uid}/{document=**} {
+      allow read, write: if signedIn() && request.auth.uid == uid && isAllowedUser();
     }
