@@ -46,6 +46,9 @@ button:active{transform:scale(.97)}
 .tbtn:hover{background:rgba(255,255,255,.85)}
 .tbtn.gold{background:linear-gradient(135deg,#f2d89d,#e6c27a);color:#5e4613;border-color:rgba(255,255,255,.6);box-shadow:0 4px 12px rgba(214,170,90,.28)}
 .tbtn.gold:hover{filter:brightness(1.04)}
+.cdot{display:inline-block;width:10px;height:10px;border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.7)}
+.cdot.pulse{animation:pulse 1s ease-in-out infinite alternate}
+@keyframes pulse{to{opacity:.35}}
 .menu{position:relative}
 .drop{position:absolute;right:0;top:50px;background:var(--glass3);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--gb);color:var(--txt);border-radius:16px;box-shadow:var(--sh);min-width:220px;padding:6px;display:none;z-index:1200}
 .drop.on{display:block;animation:pop .16s ease-out}
@@ -302,6 +305,7 @@ details.shiftset summary{font-weight:700;cursor:pointer;color:var(--pri)}
   <div id="searchWrap"><input id="q" placeholder="搜尋地址 / 地標 / 已建社區…" autocomplete="off"><div id="qres"></div></div>
   <div class="sp hide-m"></div>
   <button class="tbtn gold" id="btnPin" title="在地圖中心放圖標">📍<span class="t">放圖標</span></button>
+  <button class="tbtn" id="btnCloud" onclick="openCloud()">☁️<span class="t">登入同步</span></button>
   <button class="tbtn" id="btnPdf">📄<span class="t">PDF</span></button>
   <div class="menu"><button class="tbtn" id="btnMenu">⋯</button>
     <div class="drop" id="drop">
@@ -367,8 +371,9 @@ const KV={db:null,
 };
 const DEFAULT_STATE=()=>({version:1,communities:[],shiftPatterns:[{id:'p42',name:'做四休二',work:4,off:2}],settings:{brand:'日勝房屋 業務區長 吳松儒Ryan 0975-711-267'},view:null});
 let S=DEFAULT_STATE();
-let saveT=null;
-function persist(){clearTimeout(saveT);saveT=setTimeout(async()=>{const ok=await KV.set('state',S);if(!ok)toast('⚠️ 儲存失敗（瀏覽器空間不足？請先匯出備份）',4000)},250)}
+let saveT=null,CURKEY='state';
+function saveLocal(){clearTimeout(saveT);const key=CURKEY;saveT=setTimeout(async()=>{const ok=await KV.set(key,S);if(!ok)toast('⚠️ 本機儲存失敗（瀏覽器空間不足？）',4000)},250)}
+function persist(){saveLocal();scheduleSync()}
 
 /* ================= 資料計算 ================= */
 function cAge(c){let y=c.builtYear;if(!y)return null;if(y<1911)y+=1911;return new Date().getFullYear()-y}
@@ -530,7 +535,7 @@ function tabBasic(){return `
   <div class="row small mut">座標 ${E.lat.toFixed(5)}, ${E.lng.toFixed(5)} ${isNew?'':'<button class="btn sm" data-act="relocate">📍 重新定位圖標</button>'}</div>`}
 function tabPlans(){return `
   <label class="upload">＋ 上傳社區平面圖（可一次選多張）<input type="file" accept="image/*" multiple id="planIn" hidden></label>
-  <div class="plans">${E.plans.map((p,i)=>`<div class="plan"><img src="${p.src}" data-act="zoom" data-i="${i}" alt=""><div class="pf"><input data-arr="plans" data-i="${i}" data-f="caption" value="${esc(p.caption)}" placeholder="說明，例：A棟 標準層"><button class="ibtn" data-act="delPlan" data-i="${i}">×</button></div></div>`).join('')}</div>
+  <div class="plans">${E.plans.map((p,i)=>`<div class="plan">${p.src?`<img src="${p.src}" data-act="zoom" data-i="${i}" alt="">`:`<div style="height:150px;display:grid;place-items:center" class="small mut">雲端圖片載入中…</div>`}<div class="pf"><input data-arr="plans" data-i="${i}" data-f="caption" value="${esc(p.caption)}" placeholder="說明，例：A棟 標準層"><button class="ibtn" data-act="delPlan" data-i="${i}">×</button></div></div>`).join('')}</div>
   ${E.plans.length?'':'<div class="empty">尚未上傳平面圖</div>'}
   <p class="small mut">圖片會自動壓縮後儲存在本機瀏覽器，並可輸出到 PDF。</p>`}
 function tabLayouts(){return `
@@ -743,9 +748,9 @@ $('#panel').addEventListener('click',e=>{
   if(act){const d=act.dataset;const c=S.communities.find(x=>x.id===d.cid);if(!c)return;
     if(d.act==='openC'){openCommunity(c.id,'listings');return}
     const l=c.listings.find(x=>x.id===d.lid);
-    if(d.act==='mv'){l.stage=d.to;l.stageDate=todayStr();persist();renderAll();toast(`「${l.address||'物件'}」已移至${stg(d.to).n}`)}
+    if(d.act==='mv'){l.stage=d.to;l.stageDate=todayStr();c.updatedAt=Date.now();persist();renderAll();toast(`「${l.address||'物件'}」已移至${stg(d.to).n}`)}
     if(d.act==='lEdit'){openCommunity(c.id,'listings');startEditListing(l)}
-    if(d.act==='lDel'&&confirm('刪除此物件？')){c.listings=c.listings.filter(x=>x.id!==l.id);persist();renderAll()}
+    if(d.act==='lDel'&&confirm('刪除此物件？')){c.listings=c.listings.filter(x=>x.id!==l.id);c.updatedAt=Date.now();persist();renderAll()}
     return}
   const ci=e.target.closest('.citem');if(ci){const c=S.communities.find(x=>x.id===ci.dataset.cid);map.setView([c.lat,c.lng],Math.max(map.getZoom(),17));closePanelMobile();openCommunity(c.id)}
 });
@@ -763,12 +768,12 @@ $('#drop').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(
   ({labels(){S.settings.hideLabels=!S.settings.hideLabels;persist();applyLabelZoom();toast(S.settings.hideLabels?'已隱藏標籤':'已顯示標籤（縮放 14 級以上）')},
     fit(){S.communities.length?fitAll():toast('尚無社區')},
     export:exportJSON,import(){$('#importIn').click()},brand:openBrand,demo:loadDemo,
-    clear(){if(confirm('確定清除全部社區資料？建議先匯出備份。')&&confirm('再次確認：清除後無法復原。')){const keep=S.settings;S=DEFAULT_STATE();S.settings=keep;RS.clear();persist();renderAll();toast('已清除')}}})[b.dataset.m]()});
-function exportJSON(){const blob=new Blob([JSON.stringify(S)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`商圈精耕備份_${todayStr()}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('已匯出備份')}
+    clear(){if(confirm(CLOUD.user?'確定清除全部社區資料？雲端與所有同步裝置上的資料也會一起刪除，建議先匯出備份。':'確定清除全部社區資料？建議先匯出備份。')&&confirm('再次確認：清除後無法復原。')){const keep=S.settings,ou=S.ownerUid,ci=S.cloudIds;S=DEFAULT_STATE();S.settings=keep;S.ownerUid=ou;S.cloudIds=ci;RS.clear();persist();renderAll();toast('已清除')}}})[b.dataset.m]()});
+function exportJSON(){const {ownerUid,cloudIds,...out}=S;const blob=new Blob([JSON.stringify(out)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`商圈精耕備份_${todayStr()}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('已匯出備份')}
 $('#importIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
   try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.communities))throw 0;
     if(!confirm(`備份內含 ${d.communities.length} 個社區。\n按「確定」以備份取代目前資料。`))return;
-    S={...DEFAULT_STATE(),...d};if(!S.shiftPatterns?.length)S.shiftPatterns=DEFAULT_STATE().shiftPatterns;migrate();persist();RS.clear();renderAll();fitAll();toast('匯入完成')}
+    const ou=S.ownerUid,ci=S.cloudIds;S={...DEFAULT_STATE(),...d,ownerUid:ou,cloudIds:ci};if(!S.shiftPatterns?.length)S.shiftPatterns=DEFAULT_STATE().shiftPatterns;S.communities.forEach(c=>c.updatedAt=Date.now());migrate();persist();RS.clear();renderAll();fitAll();toast('匯入完成')}
   catch(err){toast('檔案格式不正確')}};
 function migrate(){S.settings=S.settings||{};if(!S.settings.brand)S.settings.brand=DEFAULT_STATE().settings.brand;
   S.communities.forEach(c=>{['roads','plans','layouts','staff','listings'].forEach(k=>{if(!Array.isArray(c[k]))c[k]=[]})})}
@@ -895,7 +900,7 @@ function rptCommunity(c,P){
     h+=c.listings.length?`<table><thead><tr><th>階段</th><th>地址</th><th>樓層</th><th>格局</th><th class="n">坪數</th><th class="n">開價(萬)</th><th class="n">單價(萬/坪)</th><th>車位</th></tr></thead><tbody>
     ${STAGES.flatMap(st=>c.listings.filter(l=>l.stage===st.k).map(l=>{const up=unitPrice(l);return `<tr><td><span class="stg" style="background:${st.c}">${st.n}</span></td><td>${esc(l.address||'—')}${l.note?`<br><span style="color:#7d8a9c;font-size:11px">${esc(l.note)}</span>`:''}</td><td>${esc(l.floor||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping?f2(l.ping):'—'}</td><td class="n"><b>${l.price?fInt(l.price):'—'}</b></td><td class="n">${up?f2(up):'—'}</td><td>${esc(parkStr(l))}</td></tr>`})).join('')}</tbody></table>`:'<div class="none">目前無在售物件</div>'}
   if(c.note)h+=`<h3>備註</h3><div class="note pb">${esc(c.note)}</div>`;
-  if(P.plans&&c.plans.length)h+=`<h3>社區平面圖</h3>`+c.plans.map(p=>`<div class="plan-img pb"><img src="${p.src}"><div>${esc(p.caption||'')}</div></div>`).join('');
+  if(P.plans&&c.plans.some(p=>p.src))h+=`<h3>社區平面圖</h3>`+c.plans.filter(p=>p.src).map(p=>`<div class="plan-img pb"><img src="${p.src}"><div>${esc(p.caption||'')}</div></div>`).join('');
   return h+`</section>`;
 }
 function waitImgs(el){return Promise.all([...el.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})))}
@@ -935,17 +940,166 @@ function printReport(r){
   w.document.close();
 }
 
+
+/* ================= 雲端同步（Firebase / Firestore，依 Google 帳號各自獨立） ================= */
+const CLOUD={user:null,unsubs:[],last:{},meta:'',planSent:new Set(),planCache:{},commReady:false,plansReady:false,metaReady:false,pending:0,err:null,timer:null,unavailable:false,loaded:false};
+function scheduleSync(){if(!CLOUD.user)return;clearTimeout(CLOUD.timer);CLOUD.timer=setTimeout(syncUp,600)}
+function commDocData(c){const o={};for(const k in c){if(k.startsWith('_')||k==='plans'||k==='ownerUid')continue;o[k]=c[k]===undefined?null:c[k]}o.plans=(c.plans||[]).map(p=>({id:p.id,caption:p.caption||''}));return o}
+function fromCloud(d,loc){const c={...d};c.plans=(d.plans||[]).map(p=>({id:p.id,caption:p.caption||'',src:CLOUD.planCache[p.id]||(loc&&(loc.plans||[]).find(x=>x.id===p.id)||{}).src||''}));['roads','layouts','staff','listings'].forEach(k=>{if(!Array.isArray(c[k]))c[k]=[]});return c}
+function wr(p,onFail){CLOUD.pending++;setCloudUI();p.then(()=>{CLOUD.err=null}).catch(e=>{CLOUD.err=e;console.error(e);onFail&&onFail();if(e&&e.code==='permission-denied')toast('⚠️ 雲端拒絕寫入：Firestore 規則尚未開通',4000)}).finally(()=>{CLOUD.pending--;setCloudUI()})}
+function shrinkForCloud(src,limit=880000){if(!src||src.length<=limit)return Promise.resolve(src);return new Promise(res=>{const img=new Image();img.onload=()=>{let w=img.width,h=img.height,q=.8,out=src;const c=document.createElement('canvas'),x=c.getContext('2d');for(let i=0;i<8&&out.length>limit;i++){w=Math.round(w*.85);h=Math.round(h*.85);c.width=w;c.height=h;x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);out=c.toDataURL('image/jpeg',q);q=Math.max(.6,q-.04)}res(out)};img.onerror=()=>res(src);img.src=src})}
+async function syncUp(){
+  if(!CLOUD.user||!window.FB)return;const {db,fs}=FB;const uid=CLOUD.user.uid;
+  if(CLOUD.commReady){const ids=new Set();
+    for(const c of S.communities){ids.add(c.id);const d=commDocData(c);const j=JSON.stringify(d);if(CLOUD.last[c.id]!==j){CLOUD.last[c.id]=j;wr(fs.setDoc(fs.doc(db,'sqfarm',uid,'communities',c.id),d),()=>{delete CLOUD.last[c.id]})}}
+    for(const id of Object.keys(CLOUD.last))if(!ids.has(id)){delete CLOUD.last[id];wr(fs.deleteDoc(fs.doc(db,'sqfarm',uid,'communities',id)))}
+    if(CLOUD.plansReady){const live=new Set();
+      for(const c of S.communities)for(const p of (c.plans||[])){live.add(p.id);if(p.src&&!CLOUD.planSent.has(p.id)){CLOUD.planSent.add(p.id);p.src=await shrinkForCloud(p.src);CLOUD.planCache[p.id]=p.src;const pid=p.id;wr(fs.setDoc(fs.doc(db,'sqfarm',uid,'plans',pid),{cid:c.id,src:p.src,updatedAt:Date.now()}),()=>CLOUD.planSent.delete(pid))}}
+      for(const pid of [...CLOUD.planSent])if(!live.has(pid)){CLOUD.planSent.delete(pid);delete CLOUD.planCache[pid];wr(fs.deleteDoc(fs.doc(db,'sqfarm',uid,'plans',pid)))}}
+  }
+  if(CLOUD.metaReady){const m={shiftPatterns:S.shiftPatterns,brand:S.settings.brand};const j=JSON.stringify(m);if(j!==CLOUD.meta){CLOUD.meta=j;wr(fs.setDoc(fs.doc(db,'sqfarm',uid),{...m,updatedAt:Date.now()}),()=>{CLOUD.meta=''})}}
+  saveLocal();setCloudUI();
+}
+function afterRemote(){saveLocal();renderAll();setCloudUI()}
+function onCloudErr(e){console.error(e);CLOUD.err=e;setCloudUI();if(e&&e.code==='permission-denied')toast('⚠️ 雲端讀取被拒：請到 Firebase 加入本系統的 Firestore 規則',5000)}
+function onComm(snap){
+  if(snap.metadata.fromCache&&!CLOUD.commReady)return;
+  if(!CLOUD.commReady){
+    const cloud=new Map(snap.docs.map(d=>[d.id,d.data()]));const known=new Set(S.cloudIds||[]);const out=[];let dropped=0;
+    for(const [id,d] of cloud){const loc=S.communities.find(c=>c.id===id);if(loc&&(loc.updatedAt||0)>(d.updatedAt||0))out.push(loc);else{const c=fromCloud(d,loc);out.push(c);CLOUD.last[id]=JSON.stringify(commDocData(c))}}
+    for(const loc of S.communities)if(!cloud.has(loc.id)){if(known.has(loc.id))dropped++;else out.push(loc)}
+    S.communities=out;S.cloudIds=snap.docs.map(d=>d.id);CLOUD.commReady=true;CLOUD.err=null;afterRemote();syncUp();
+    if(!S.view&&S.communities.length)fitAll();
+    return;
+  }
+  let ch=false;
+  snap.docChanges().forEach(x=>{if(x.doc.metadata.hasPendingWrites)return;const id=x.doc.id;
+    if(x.type==='removed'){if(S.communities.some(c=>c.id===id)){S.communities=S.communities.filter(c=>c.id!==id);ch=true}delete CLOUD.last[id];return}
+    const d=x.doc.data();const i=S.communities.findIndex(c=>c.id===id);const loc=S.communities[i];
+    if(loc&&(loc.updatedAt||0)>(d.updatedAt||0))return;
+    const c=fromCloud(d,loc);const j=JSON.stringify(commDocData(c));
+    if(loc&&JSON.stringify(commDocData(loc))===j){CLOUD.last[id]=j;return}
+    CLOUD.last[id]=j;if(i>=0)S.communities[i]=c;else S.communities.push(c);ch=true});
+  if(!snap.metadata.fromCache)S.cloudIds=snap.docs.filter(d=>!d.metadata.hasPendingWrites).map(d=>d.id);
+  if(ch)afterRemote();else setCloudUI();
+}
+function applyPlan(id,src){let ch=false;for(const c of S.communities){const p=(c.plans||[]).find(p=>p.id===id);if(p&&p.src!==src){p.src=src;ch=true}}return ch}
+function onPlans(snap){
+  if(snap.metadata.fromCache&&!CLOUD.plansReady)return;let ch=false;
+  if(!CLOUD.plansReady){snap.docs.forEach(d=>{const v=d.data();CLOUD.planCache[d.id]=v.src;CLOUD.planSent.add(d.id);if(applyPlan(d.id,v.src))ch=true});CLOUD.plansReady=true;if(ch)afterRemote();syncUp();return}
+  snap.docChanges().forEach(x=>{const id=x.doc.id;if(x.type==='removed'){delete CLOUD.planCache[id];CLOUD.planSent.delete(id);return}
+    const v=x.doc.data();CLOUD.planCache[id]=v.src;CLOUD.planSent.add(id);if(applyPlan(id,v.src))ch=true});
+  if(ch)afterRemote();
+}
+function onMeta(s){
+  if(s.metadata.fromCache&&!CLOUD.metaReady)return;if(s.metadata.hasPendingWrites)return;
+  const d=s.exists()?s.data():null;const first=!CLOUD.metaReady;
+  if(d){if(Array.isArray(d.shiftPatterns)){if(first){d.shiftPatterns.forEach(p=>{if(!S.shiftPatterns.some(x=>x.id===p.id))S.shiftPatterns.push(p)})}else S.shiftPatterns=d.shiftPatterns}
+    if(d.brand)S.settings.brand=d.brand;CLOUD.meta=JSON.stringify({shiftPatterns:d.shiftPatterns,brand:d.brand})}
+  CLOUD.metaReady=true;if(first)syncUp();saveLocal();
+}
+function stopCloud(){CLOUD.unsubs.forEach(u=>{try{u()}catch(e){}});CLOUD.unsubs=[];CLOUD.commReady=CLOUD.plansReady=CLOUD.metaReady=false;CLOUD.last={};CLOUD.planSent=new Set();CLOUD.planCache={};CLOUD.meta='';CLOUD.err=null}
+function startCloud(uid){
+  stopCloud();const {db,fs}=FB;const o={includeMetadataChanges:true};
+  CLOUD.unsubs.push(fs.onSnapshot(fs.collection(db,'sqfarm',uid,'communities'),o,onComm,onCloudErr));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.collection(db,'sqfarm',uid,'plans'),o,onPlans,onCloudErr));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.doc(db,'sqfarm',uid),o,onMeta,onCloudErr));
+}
+async function loadKey(key){CURKEY=key;const d=await KV.get(key);S=d&&Array.isArray(d.communities)?{...DEFAULT_STATE(),...d}:DEFAULT_STATE();if(!S.shiftPatterns||!S.shiftPatterns.length)S.shiftPatterns=DEFAULT_STATE().shiftPatterns;migrate();RS.clear()}
+async function switchToUser(uid){
+  const key='state:'+uid;if(CURKEY!==key)await loadKey(key);
+  const anon=await KV.get('state');
+  if(anon&&Array.isArray(anon.communities)&&anon.communities.length){
+    const have=new Set(S.communities.map(c=>c.id));let n=0;
+    anon.communities.forEach(c=>{if(!have.has(c.id)){c.updatedAt=Date.now();S.communities.push(c);n++}});
+    (anon.shiftPatterns||[]).forEach(p=>{if(!S.shiftPatterns.some(x=>x.id===p.id))S.shiftPatterns.push(p)});
+    if(!S.view&&anon.view)S.view=anon.view;
+    await KV.set('state',{...DEFAULT_STATE(),settings:anon.settings||DEFAULT_STATE().settings,view:anon.view||null});
+    if(n)toast(`已把這台裝置原本的 ${n} 個社區併入你的雲端帳號`,4000);
+  }
+  S.ownerUid=uid;await KV.set(key,S);renderAll();
+}
+async function onAuthChange(user){
+  clearTimeout(saveT);await KV.set(CURKEY,S);
+  if(user){if(CLOUD.user&&CLOUD.user.uid===user.uid)return;CLOUD.user=user;try{localStorage.setItem('sqfarm_uid',user.uid)}catch(e){}
+    await switchToUser(user.uid);startCloud(user.uid);
+  }else{const was=CLOUD.user;stopCloud();CLOUD.user=null;try{localStorage.removeItem('sqfarm_uid')}catch(e){}
+    if(was||CURKEY!=='state'){await loadKey('state');renderAll()}}
+  setCloudUI();
+}
+function cloudState(){
+  if(CLOUD.unavailable)return {k:'na',t:'雲端無法使用',c:'#9aa5b4'};
+  if(!CLOUD.loaded)return {k:'load',t:'連線中',c:'#c8b07a'};
+  if(!CLOUD.user)return {k:'off',t:'登入同步',c:''};
+  if(CLOUD.err)return {k:'err',t:'同步錯誤',c:'#d47f79'};
+  if(!navigator.onLine)return {k:'offline',t:'離線（稍後同步）',c:'#9aa5b4'};
+  if(!CLOUD.commReady||CLOUD.pending>0)return {k:'sync',t:'同步中…',c:'#e6c27a'};
+  return {k:'ok',t:'已同步',c:'#6faa8b'};
+}
+function setCloudUI(){const b=$('#btnCloud');if(!b)return;const s=cloudState();
+  b.innerHTML=s.k==='off'?`☁️<span class="t">登入同步</span>`:`<i class="cdot ${s.k==='sync'?'pulse':''}" style="background:${s.c}"></i><span class="t">${s.t}</span>`;
+  b.title=CLOUD.user?`${CLOUD.user.email}｜${s.t}`:s.t;
+  if($('#ov2').classList.contains('on')&&$('#cloudBox'))renderCloudModal();
+}
+window.addEventListener('online',setCloudUI);window.addEventListener('offline',setCloudUI);
+function errText(e){if(!e)return '';const c=e.code||'';
+  if(c==='permission-denied')return 'Firestore 規則尚未開通本系統的資料路徑（sqfarm）。請到 Firebase 主控台 → Firestore → 規則，加入設定說明中的規則。';
+  if(c==='auth/unauthorized-domain')return '此網址未列入 Firebase 授權網域，請用 GitHub Pages 網址開啟。';
+  if(c==='auth/popup-closed-by-user'||c==='auth/cancelled-popup-request')return '登入視窗已關閉。';
+  return (c?c+'：':'')+(e.message||String(e));}
+function renderCloudModal(){
+  const s=cloudState();const u=CLOUD.user;
+  $('#mcard2').innerHTML=`<div class="chd"><h3>☁️ 雲端同步</h3><button class="close" data-cl="x">✕</button></div>
+  <div class="cbody" id="cloudBox">
+  ${CLOUD.unavailable?`<div class="hint">雲端元件無法載入。請確認網路，並用 GitHub Pages 網址開啟（直接開本機檔案無法登入）。</div>`:
+   !u?`<p style="margin-top:0">用 Google 帳號登入後，資料會存到雲端並在<b>手機、平板、電腦、各瀏覽器</b>之間即時同步。</p>
+   <ul class="small mut" style="padding-left:18px;line-height:1.8"><li>每個帳號的資料各自獨立，只有本人看得到</li><li>這台裝置目前的社區資料，第一次登入時會自動併入帳號</li><li>離線時照常可用，恢復網路後自動上傳</li></ul>
+   <button class="btn pri block" data-cl="in" ${CLOUD.loaded?'':'disabled'}>${CLOUD.loaded?'使用 Google 帳號登入':'雲端元件載入中…'}</button>`:
+   `<div class="row" style="flex-wrap:nowrap;gap:12px;margin-bottom:12px">${u.photoURL?`<img src="${esc(u.photoURL)}" referrerpolicy="no-referrer" style="width:46px;height:46px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.1)">`:''}<div style="min-width:0"><b>${esc(u.displayName||'')}</b><div class="small mut" style="overflow:hidden;text-overflow:ellipsis">${esc(u.email||'')}</div></div></div>
+   <div class="stat" style="margin-top:0"><div class="row"><i class="cdot ${s.k==='sync'?'pulse':''}" style="background:${s.c}"></i><b>${s.t}</b></div>
+   <div class="small mut" style="margin-top:6px">雲端社區 ${(S.cloudIds||[]).length} 個・本機 ${S.communities.length} 個${CLOUD.pending?`・待上傳 ${CLOUD.pending} 筆`:''}</div></div>
+   ${CLOUD.err?`<div class="hint" style="background:rgba(212,127,121,.12);border-color:rgba(212,127,121,.3);color:#9c4d48">${esc(errText(CLOUD.err))}</div>`:''}
+   <div class="row"><button class="btn" data-cl="sync">🔄 重新同步</button><div style="flex:1"></div><button class="btn danger" data-cl="out">登出</button></div>`}
+  </div>`;
+}
+function openCloud(){renderCloudModal();$('#ov2').classList.add('on')}
+$('#mcard2').addEventListener('click',async e=>{const b=e.target.closest('[data-cl]');if(!b)return;const a=b.dataset.cl;
+  if(a==='x')$('#ov2').classList.remove('on');
+  if(a==='in'){try{b.disabled=true;b.textContent='登入中…';await FB.signIn();$('#ov2').classList.remove('on')}catch(err){CLOUD.err=err;renderCloudModal();toast(errText(err),4000)}}
+  if(a==='sync'&&CLOUD.user){startCloud(CLOUD.user.uid);toast('重新同步中…');setCloudUI()}
+  if(a==='out'){const unsynced=CLOUD.pending>0||!navigator.onLine;
+    if(!confirm(unsynced?'還有資料尚未上傳到雲端，登出後這些變更可能遺失。確定登出？':'登出後這台裝置將不再顯示你的雲端資料（資料仍保存在雲端）。確定登出？'))return;
+    const uid=CLOUD.user.uid;await FB.signOut();if(!unsynced)await KV.set('state:'+uid,null);$('#ov2').classList.remove('on');toast('已登出')}
+});
+
 /* ================= 啟動 ================= */
 (async()=>{
   await KV.open();
-  const d=await KV.get('state');
-  if(d&&Array.isArray(d.communities)){S={...DEFAULT_STATE(),...d};if(!S.shiftPatterns?.length)S.shiftPatterns=DEFAULT_STATE().shiftPatterns}
-  migrate();
+  let lu=null;try{lu=localStorage.getItem('sqfarm_uid')}catch(e){}
+  await loadKey(lu?'state:'+lu:'state');
   $('#brandSmall').textContent='日勝房屋・商圈精耕';
   if(!window.L){document.getElementById('map').innerHTML='<div class="empty" style="margin:100px 20px;background:rgba(255,255,255,.8)">地圖元件載入失敗，請確認網路連線後重新整理。</div>';renderPanel();return}
-  initMap();renderAll();
-  if(!S.communities.length)setTimeout(()=>toast('點地圖任一處放置圖標，再按「＋ 新增」建立社區',4000),600);
+  initMap();renderAll();setCloudUI();
+  const initCloud=()=>{CLOUD.loaded=true;setCloudUI();FB.onAuth(onAuthChange)};
+  if(window.FB)initCloud();else{window.addEventListener('fb-ready',initCloud,{once:true});window.addEventListener('fb-fail',()=>{CLOUD.unavailable=true;setCloudUI()},{once:true});setTimeout(()=>{if(!window.FB&&!CLOUD.unavailable){CLOUD.unavailable=true;setCloudUI()}},15000)}
+  if(!S.communities.length&&!lu)setTimeout(()=>toast('點地圖任一處放置圖標，再按「＋ 新增」建立社區',4000),600);
 })();
+</script>
+<script type="module">
+/* Firebase：沿用 estate-tracker 專案；以獨立 app 名稱「sqfarm」初始化，登入狀態與 RE-CMS 互不干擾 */
+const V='10.12.2',B='https://www.gstatic.com/firebasejs/'+V+'/';
+try{
+  const [{initializeApp},A,F,C]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-firestore.js'),import(B+'firebase-app-check.js')]);
+  const app=initializeApp({apiKey:"AIzaSyCe5b4l0Eru24YeD09wrEFktKEqZKeI7Vw",authDomain:"estate-tracker-3ddc2.firebaseapp.com",projectId:"estate-tracker-3ddc2",storageBucket:"estate-tracker-3ddc2.appspot.com",messagingSenderId:"90794280447",appId:"1:90794280447:web:50558311633514c27b93ca"},'sqfarm');
+  if(/github\.io$/.test(location.hostname)){try{C.initializeAppCheck(app,{provider:new C.ReCaptchaV3Provider('6LfwYR4tAAAAANSOnxEuKaXeO8HAnSWfuh3hh6Tx'),isTokenAutoRefreshEnabled:true})}catch(e){console.warn('AppCheck',e)}}
+  let db;try{db=F.initializeFirestore(app,{localCache:F.persistentLocalCache({tabManager:F.persistentMultipleTabManager()})})}catch(e){db=F.getFirestore(app)}
+  const auth=A.getAuth(app);
+  const signIn=async()=>{const p=new A.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+    try{return await A.signInWithPopup(auth,p)}catch(e){if(['auth/popup-blocked','auth/operation-not-supported-in-environment','auth/web-storage-unsupported'].includes(e.code))return A.signInWithRedirect(auth,p);throw e}};
+  A.getRedirectResult(auth).catch(e=>console.warn(e));
+  window.FB={db,auth,fs:{doc:F.doc,collection:F.collection,setDoc:F.setDoc,deleteDoc:F.deleteDoc,onSnapshot:F.onSnapshot},signIn,signOut:()=>A.signOut(auth),onAuth:cb=>A.onAuthStateChanged(auth,cb)};
+  window.dispatchEvent(new Event('fb-ready'));
+}catch(e){console.error('Firebase 載入失敗',e);window.dispatchEvent(new Event('fb-fail'))}
 </script>
 </body>
 </html>

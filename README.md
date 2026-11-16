@@ -7,4 +7,9 @@
 - 道路成交均價查詢（可複選道路）
 - PDF 報告：以社區／以道路／全部社區
 
-資料只存在使用者自己的瀏覽器（IndexedDB），不會上傳到本 repo；請用「⋯ → 匯出備份」定期備份。
+## 資料儲存與同步
+
+- 未登入：資料只存在目前瀏覽器（IndexedDB）。
+- 用 Google 帳號登入（右上「☁️ 登入同步」）：資料存到 Firebase Firestore（estate-tracker 專案的 `sqfarm/{uid}`），手機、電腦、各瀏覽器即時同步，每個帳號各自獨立；離線可用，恢復網路後自動上傳。
+- 首次啟用需在 Firestore 規則加入 `firestore.rules.snippet` 的內容。
+- 資料不會存進本 repo；仍可用「⋯ → 匯出備份」另存 JSON。
