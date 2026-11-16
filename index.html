@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>商圈精耕系統｜日勝房屋</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{--blue:#114F9C;--blue2:#0b3a75;--blueL:#e8f0fb;--gold:#F4CD3B;--goldD:#b88a00;--bg:#f3f5f9;--line:#e1e6ee;--txt:#1c2533;--mut:#6b7686;--red:#d64545;--green:#2e9d5b;--orange:#e8862d}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:'Noto Sans TC','Noto Sans CJK TC','PingFang TC','Microsoft JhengHei',system-ui,sans-serif;color:var(--txt);background:var(--bg);-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+/* ---------- top bar ---------- */
+#top{position:fixed;top:0;left:0;right:0;height:58px;background:var(--blue);color:#fff;display:flex;align-items:center;gap:8px;padding:0 12px;z-index:1100;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.brand{display:flex;align-items:center;gap:9px;white-space:nowrap}
+.brand .logo{width:34px;height:34px;border-radius:9px;background:var(--gold);color:var(--blue);display:grid;place-items:center;font-weight:900;font-size:17px}
+.brand b{font-size:16px;font-weight:900;letter-spacing:.5px;display:block;line-height:1.1}
+.brand small{display:block;font-size:11px;opacity:.8;line-height:1.2}
+#searchWrap{flex:1;max-width:440px;position:relative;margin-left:6px}
+#q{width:100%;height:38px;border-radius:19px;border:0;padding:0 16px;outline:none}
+#qres{position:absolute;top:44px;left:0;right:0;background:#fff;color:var(--txt);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);max-height:320px;overflow:auto;display:none}
+#qres div{padding:10px 14px;border-bottom:1px solid var(--line);cursor:pointer;font-size:14px}
+#qres div:hover{background:var(--blueL)}
+#qres .h{font-size:12px;color:var(--mut);cursor:default;background:#fafbfd}
+.sp{flex:1}
+.tbtn{height:38px;border-radius:19px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.1);color:#fff;padding:0 14px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.tbtn:hover{background:rgba(255,255,255,.2)}
+.tbtn.gold{background:var(--gold);color:var(--blue);border-color:var(--gold)}
+.menu{position:relative}
+.drop{position:absolute;right:0;top:46px;background:#fff;color:var(--txt);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.22);min-width:210px;padding:6px;display:none;z-index:1200}
+.drop.on{display:block}
+.drop button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:8px;font-size:14px}
+.drop button:hover{background:var(--blueL)}
+.drop hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.drop .danger{color:var(--red)}
+/* ---------- map + panel ---------- */
+#map{position:fixed;top:58px;left:0;right:390px;bottom:0;background:#dde3ea}
+#panel{position:fixed;top:58px;right:0;width:390px;bottom:0;background:#fff;border-left:1px solid var(--line);display:flex;flex-direction:column;z-index:1000}
+body.panel-off #map{right:0}
+body.panel-off #panel{display:none}
+.ptabs{display:flex;border-bottom:1px solid var(--line);flex:none}
+.ptabs button{flex:1;border:0;background:none;padding:13px 4px;font-weight:700;color:var(--mut);border-bottom:3px solid transparent;font-size:14px}
+.ptabs button.on{color:var(--blue);border-bottom-color:var(--blue)}
+.pbody{flex:1;overflow:auto;padding:12px}
+.grab{display:none}
+@media(max-width:860px){
+  #map{right:0}
+  #panel{top:auto;height:62vh;width:100%;border-radius:18px 18px 0 0;transform:translateY(105%);transition:transform .25s;box-shadow:0 -10px 34px rgba(0,0,0,.22);border:0}
+  body.panel-open #panel{transform:none}
+  body.panel-off #panel{display:flex}
+  .grab{display:block;width:44px;height:5px;border-radius:3px;background:#cfd6e0;margin:8px auto 0;flex:none}
+  .hide-m{display:none!important}
+  .brand small{display:none}
+  .tbtn{padding:0 11px}
+}
+@media(max-width:520px){ .brand b{display:none} #top{gap:6px;padding:0 8px} .tbtn .t{display:none} }
+/* ---------- markers ---------- */
+.cm-icon{background:none;border:0}
+.cm{position:relative;width:28px;height:28px}
+.cm .pin{position:absolute;left:1px;top:0;width:26px;height:26px;border-radius:50% 50% 50% 0;background:var(--blue);transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.cm .pin::after{content:'';position:absolute;width:8px;height:8px;background:var(--gold);border-radius:50%;left:7px;top:7px}
+.cm .lbl{position:absolute;left:32px;top:-8px;background:#fff;border-radius:9px;padding:5px 9px 5px 8px;box-shadow:0 3px 10px rgba(0,0,0,.22);white-space:nowrap;font-size:12px;line-height:1.4;border-left:4px solid var(--blue);font-family:'Noto Sans TC',sans-serif;color:var(--txt)}
+.cm .lbl b{font-size:13px;color:var(--blue);font-weight:900}
+.cm .lbl .pr{color:var(--goldD);font-weight:900}
+.cm .lbl .ly{color:var(--mut)}
+.cm.hl .pin{background:var(--orange)}
+.cm.hl .lbl{border-left-color:var(--orange);box-shadow:0 0 0 2px var(--gold),0 3px 10px rgba(0,0,0,.22)}
+.cm.dim{opacity:.3}
+body.nolabel .cm .lbl{display:none}
+.cm.tmp .pin{background:var(--red);animation:bob 1s ease-in-out infinite alternate}
+@keyframes bob{to{transform:rotate(-45deg) translate(3px,-3px)}}
+.leaflet-popup-content{margin:12px 14px;font-family:'Noto Sans TC',sans-serif}
+.pp{min-width:200px}
+.pp .addr{font-size:13px;color:var(--mut);margin-bottom:10px;line-height:1.5}
+.pp .row{display:flex;gap:6px}
+/* ---------- generic ---------- */
+.btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 13px;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:#c5cfdc}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--blue)}
+.btn.ghost{background:none;border-color:transparent;color:var(--blue)}
+.btn.danger{color:var(--red);border-color:#f0c9c9}
+.btn.sm{padding:5px 9px;font-size:12.5px;border-radius:8px}
+.btn.block{width:100%}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.end{justify-content:flex-end}
+.mut{color:var(--mut)}
+.small{font-size:12.5px}
+.empty{color:var(--mut);text-align:center;padding:22px 10px;font-size:14px;border:1px dashed var(--line);border-radius:12px;margin:6px 0}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:#fff;border-radius:16px;padding:5px 11px;font-size:13px;font-weight:500;margin:0 6px 6px 0}
+.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.chip.sug{border-style:dashed;color:var(--blue);background:var(--blueL)}
+.chip .x{border:0;background:none;padding:0 0 0 2px;font-size:15px;line-height:1;color:inherit;opacity:.7}
+.fld{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;min-width:0}
+.fld>span{font-size:12.5px;font-weight:700;color:var(--mut)}
+.fld.req>span::after{content:' *';color:var(--red)}
+input,select,textarea{border:1px solid #d5dce6;border-radius:9px;padding:9px 10px;background:#fff;width:100%;min-width:0;font-size:15px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(17,79,156,.12)}
+input[readonly]{background:#f6f8fb;color:var(--blue);font-weight:700}
+textarea{min-height:64px;resize:vertical}
+.g2,.g3,.g4{display:grid;gap:0 12px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:600px){.g2{grid-template-columns:1fr}.g3,.g4{grid-template-columns:1fr 1fr}}
+/* ---------- panel content ---------- */
+.citem{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;cursor:pointer;background:#fff}
+.citem:hover{border-color:var(--blue)}
+.citem .t{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.citem .t b{font-size:15px;color:var(--blue)}
+.citem .pr{color:var(--goldD);font-weight:900;white-space:nowrap}
+.citem .s{font-size:12.5px;color:var(--mut);margin-top:3px}
+.stat{background:var(--blueL);border-radius:12px;padding:12px;margin:10px 0}
+.stat .big{font-size:26px;font-weight:900;color:var(--blue)}
+.stat .big small{font-size:14px;font-weight:700}
+.rtable{width:100%;border-collapse:collapse;font-size:13.5px;margin:6px 0 12px}
+.rtable th,.rtable td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}
+.rtable th{color:var(--mut);font-size:12px;font-weight:700}
+.rtable td.n,.rtable th.n{text-align:right}
+.sechd{display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px}
+.sechd h4{margin:0;font-size:14px}
+/* ---------- modal ---------- */
+.ov{position:fixed;inset:0;background:rgba(14,26,44,.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
+.ov.on{display:flex}
+.card{background:#fff;border-radius:18px;width:100%;max-width:900px;max-height:94vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.card.narrow{max-width:560px}
+.chd{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--blue);color:#fff;flex:none}
+.chd h3{margin:0;font-size:17px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chd .close{border:0;background:rgba(255,255,255,.15);color:#fff;width:34px;height:34px;border-radius:50%;font-size:18px}
+.mtabs{display:flex;gap:4px;padding:8px 12px 0;border-bottom:1px solid var(--line);overflow-x:auto;flex:none;scrollbar-width:none}
+.mtabs button{border:0;background:none;padding:10px 12px;font-weight:700;color:var(--mut);border-bottom:3px solid transparent;white-space:nowrap;font-size:14px}
+.mtabs button.on{color:var(--blue);border-bottom-color:var(--gold)}
+.mtabs .cnt{display:inline-block;background:var(--blueL);color:var(--blue);border-radius:9px;padding:0 6px;font-size:11.5px;margin-left:3px}
+.cbody{flex:1;overflow:auto;padding:16px 18px}
+.cft{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);flex:none;align-items:center}
+@media(max-width:600px){.ov{padding:0}.card{max-height:100vh;height:100%;border-radius:0}}
+.hint{background:#fff8dc;border:1px solid #f3e2a0;color:#7a5d00;border-radius:10px;padding:8px 11px;font-size:13px;margin:0 0 12px}
+.sub{font-size:13px;font-weight:900;color:var(--blue);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.sub::before{content:'';width:4px;height:15px;background:var(--gold);border-radius:2px}
+/* plans */
+.upload{display:flex;align-items:center;justify-content:center;border:2px dashed #c6d2e3;border-radius:14px;padding:22px;color:var(--blue);font-weight:700;cursor:pointer;background:#f8fafd;margin-bottom:14px}
+.plans{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.plan{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.plan img{width:100%;height:150px;object-fit:contain;background:#f4f6f9;display:block;cursor:zoom-in}
+.plan .pf{padding:8px;display:flex;gap:6px}
+.plan input{font-size:13px;padding:6px 8px}
+/* layouts */
+.lrow{display:grid;grid-template-columns:1.7fr .8fr .8fr .8fr 1fr 34px;gap:6px;margin-bottom:6px;align-items:center}
+.lrow.h{font-size:12px;color:var(--mut);font-weight:700}
+.lrow input{padding:8px 7px}
+.ibtn{border:0;background:#fbeaea;color:var(--red);border-radius:8px;height:36px;width:34px;font-size:16px}
+/* staff */
+.weeknav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.weeknav b{flex:1;text-align:center;color:var(--blue);min-width:150px}
+.staff{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px;background:#fcfdff}
+.srow{display:grid;grid-template-columns:1.1fr .8fr 1fr .8fr 1.2fr 1fr 34px;gap:6px;align-items:center}
+@media(max-width:700px){.srow{grid-template-columns:1fr 1fr 1fr}.srow .ibtn{width:100%}}
+.srow select,.srow input{padding:8px 7px;font-size:14px}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:10px}
+.day{border:1px solid var(--line);border-radius:10px;padding:6px 2px;text-align:center;background:#fff;cursor:pointer;position:relative;line-height:1.25;user-select:none}
+.day i{font-style:normal;font-size:11.5px;color:var(--mut);display:block}
+.day b{font-size:13px;display:block}
+.day em{font-style:normal;font-size:12.5px;font-weight:900;display:block;margin-top:2px}
+.day.w{background:var(--blue);border-color:var(--blue);color:#fff}
+.day.w i{color:#cfe0f7}
+.day.o{background:#fff7d6;border-color:#f1dc8a;color:#8a6a00}
+.day.today{box-shadow:0 0 0 2px var(--orange)}
+.day.anc::after{content:'起';position:absolute;top:-7px;right:-5px;background:var(--red);color:#fff;font-size:10.5px;font-weight:900;border-radius:9px;padding:1px 5px}
+.duty{background:var(--blueL);border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:12px}
+.duty b{color:var(--blue)}
+details.shiftset{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:6px}
+details.shiftset summary{font-weight:700;cursor:pointer;color:var(--blue)}
+/* listings */
+.lform{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fcfdff;margin-bottom:14px}
+.lform h4{margin:0 0 10px;font-size:15px;color:var(--blue)}
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:760px){.lanes{grid-template-columns:1fr}}
+.lane{background:#f5f7fb;border-radius:14px;padding:10px;min-height:80px}
+.lane h5{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:6px}
+.lane h5 .dot{width:10px;height:10px;border-radius:50%}
+.lane h5 .n{margin-left:auto;background:#fff;border-radius:10px;padding:0 8px;font-size:12px}
+.lcard{background:#fff;border-radius:11px;padding:9px 10px;margin-bottom:8px;border-left:4px solid var(--blue);box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13px;line-height:1.55}
+.lcard .a{font-weight:900;font-size:14px}
+.lcard .cn{font-size:12px;color:var(--blue);font-weight:700;cursor:pointer}
+.lcard .pz b{color:var(--txt)}
+.lcard .up{color:var(--goldD);font-weight:900}
+.diff{font-size:11.5px;border-radius:6px;padding:0 5px;margin-left:3px;font-weight:700}
+.diff.u{background:#fde8e8;color:var(--red)}.diff.d{background:#e3f4ea;color:var(--green)}
+.lbtns{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.lcard .dt{font-size:11.5px;color:var(--mut)}
+/* lightbox / toast / progress */
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+#lb.on{display:flex}
+#lb img{max-width:100%;max-height:100%;border-radius:8px;background:#fff}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:#1c2533;color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:3500;opacity:0;transition:.25s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%)}
+#banner{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25);padding:10px 14px;z-index:1500;display:none;align-items:center;gap:10px;font-weight:700;font-size:14px}
+#banner.on{display:flex}
+#prog{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:4000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-weight:700;color:var(--blue)}
+#prog.on{display:flex}
+#prog .bar{width:260px;height:8px;border-radius:4px;background:var(--blueL);overflow:hidden}
+#prog .bar i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
+.pdfopt label.r{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;cursor:pointer;font-weight:700}
+.pdfopt label.r input{width:auto}
+.pdfopt label.r.on{border-color:var(--blue);background:var(--blueL)}
+.cklist{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:11px;padding:6px 10px;margin:6px 0 12px}
+.cklist label{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:14px;border-bottom:1px solid #f1f3f7}
+.cklist label:last-child{border:0}
+.cklist input,.ck input{width:auto}
+.ck{display:inline-flex;align-items:center;gap:6px;margin:0 14px 8px 0;font-size:14px}
+/* ---------- report (PDF) ---------- */
+#rpt{position:absolute;left:-12000px;top:0;width:760px;background:#fff}
+.rpt-sec{width:760px;background:#fff;color:#1c2533;font-family:'Noto Sans TC','Noto Sans CJK TC',sans-serif;font-size:13px;line-height:1.55;padding:2px 0 10px}
+.rpt-sec.cover{height:1080px;display:flex;flex-direction:column;background:linear-gradient(160deg,#114F9C 0%,#0b3a75 70%);color:#fff;border-radius:6px;padding:56px 54px;position:relative;overflow:hidden}
+.cover .cv-band{position:absolute;right:-120px;top:-120px;width:420px;height:420px;border-radius:50%;background:rgba(244,205,59,.18)}
+.cover .cv-band2{position:absolute;left:-90px;bottom:120px;width:260px;height:260px;border-radius:50%;border:28px solid rgba(255,255,255,.06)}
+.cover .cv-top{display:flex;align-items:center;gap:12px;font-weight:900;font-size:18px;position:relative}
+.cover .cv-top i{width:44px;height:44px;border-radius:11px;background:#F4CD3B;color:#114F9C;display:grid;place-items:center;font-style:normal;font-size:22px}
+.cover .cv-main{margin-top:250px;position:relative}
+.cover .cv-k{display:inline-block;background:#F4CD3B;color:#114F9C;font-weight:900;padding:4px 14px;border-radius:6px;letter-spacing:3px;font-size:15px}
+.cover h1{font-size:46px;line-height:1.2;margin:18px 0 10px;font-weight:900}
+.cover p{font-size:16px;opacity:.85;margin:0;max-width:560px}
+.cover .cv-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:56px;position:relative}
+.cover .cv-stats div{background:rgba(255,255,255,.1);border-radius:12px;padding:14px}
+.cover .cv-stats small{display:block;font-size:12px;opacity:.8}
+.cover .cv-stats b{font-size:24px;font-weight:900;color:#F4CD3B}
+.cover .cv-foot{margin-top:auto;border-top:1px solid rgba(255,255,255,.25);padding-top:16px;font-size:14px;position:relative}
+.r-head{background:#114F9C;color:#fff;border-radius:10px;padding:16px 20px;border-bottom:5px solid #F4CD3B}
+.r-head .r-t{font-size:24px;font-weight:900;line-height:1.25}
+.r-head .r-s{font-size:13px;opacity:.88;margin-top:4px}
+.r-head .r-roads{margin-top:8px}
+.r-head .r-roads span{display:inline-block;background:rgba(255,255,255,.16);border-radius:12px;padding:1px 10px;font-size:12px;margin:0 6px 4px 0}
+.r-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 4px}
+.r-kpis div{border:1px solid #e1e6ee;border-radius:9px;padding:8px 10px}
+.r-kpis small{display:block;color:#6b7686;font-size:11px}
+.r-kpis b{font-size:16px;color:#114F9C;font-weight:900}
+.r-kpis .gold b{color:#b88a00}
+.rpt-sec h2{font-size:22px;color:#114F9C;margin:4px 0 12px;font-weight:900;border-bottom:3px solid #F4CD3B;padding-bottom:6px}
+.rpt-sec h3{font-size:15px;color:#114F9C;margin:18px 0 8px;font-weight:900;display:flex;align-items:center;gap:8px}
+.rpt-sec h3::before{content:'';width:4px;height:16px;background:#F4CD3B;border-radius:2px}
+.rpt-sec h3 .r{margin-left:auto;font-size:13px;color:#b88a00}
+.rpt-sec table{width:100%;border-collapse:collapse;font-size:12.5px}
+.rpt-sec th{background:#eef3fa;color:#114F9C;font-weight:900;text-align:left;padding:6px 7px;border-bottom:2px solid #c9d7ea}
+.rpt-sec td{padding:6px 7px;border-bottom:1px solid #e6eaf0;vertical-align:top}
+.rpt-sec td.n,.rpt-sec th.n{text-align:right}
+.rpt-sec .stg{display:inline-block;border-radius:5px;padding:0 6px;font-size:11px;font-weight:900;color:#fff}
+.rpt-sec .sch td.d{text-align:center;padding:5px 1px;font-size:11px;font-weight:900}
+.rpt-sec .sch th.d{text-align:center;padding:4px 1px;font-size:10.5px;line-height:1.2}
+.rpt-sec .sch td.w{background:#114F9C;color:#fff}
+.rpt-sec .sch td.o{background:#fff4c7;color:#8a6a00}
+.rpt-sec .plan-img{margin:8px 0 14px;border:1px solid #e1e6ee;border-radius:10px;padding:8px;text-align:center}
+.rpt-sec .plan-img img{max-width:100%;max-height:900px}
+.rpt-sec .plan-img div{font-size:12px;color:#6b7686;margin-top:4px}
+.rpt-sec .note{background:#f7f9fc;border-radius:9px;padding:10px 12px;white-space:pre-wrap}
+.rpt-sec .tot{background:#fff8dc;border:1px solid #f3e2a0;border-radius:10px;padding:12px 14px;margin:10px 0;font-size:14px}
+.rpt-sec .tot b{font-size:22px;color:#b88a00}
+.rpt-sec .none{color:#8a94a3;font-size:12.5px;padding:4px 0 8px}
+</style>
+</head>
+<body>
+<header id="top">
+  <div class="brand"><div class="logo">日</div><div><b>商圈精耕系統</b><small id="brandSmall">日勝房屋</small></div></div>
+  <div id="searchWrap"><input id="q" placeholder="搜尋地址 / 地標 / 已建社區…" autocomplete="off"><div id="qres"></div></div>
+  <div class="sp hide-m"></div>
+  <button class="tbtn gold" id="btnPin" title="在地圖中心放圖標">📍<span class="t">放圖標</span></button>
+  <button class="tbtn" id="btnPdf">📄<span class="t">PDF</span></button>
+  <div class="menu"><button class="tbtn" id="btnMenu">⋯</button>
+    <div class="drop" id="drop">
+      <button data-m="labels">🏷️ 顯示 / 隱藏地圖標籤</button>
+      <button data-m="fit">🗺️ 縮放至全部社區</button>
+      <hr>
+      <button data-m="export">⬇️ 匯出備份（JSON）</button>
+      <button data-m="import">⬆️ 匯入備份</button>
+      <button data-m="brand">✍️ 報告署名設定</button>
+      <button data-m="demo">🧪 載入示範資料</button>
+      <hr>
+      <button data-m="clear" class="danger">🗑️ 清除全部資料</button>
+    </div>
+  </div>
+  <button class="tbtn" id="btnPanel">☰</button>
+</header>
+<div id="map"></div>
+<aside id="panel">
+  <div class="grab"></div>
+  <div class="ptabs" id="ptabs"></div>
+  <div class="pbody" id="pbody"></div>
+</aside>
+<div class="ov" id="ov"><div class="card" id="mcard"></div></div>
+<div class="ov" id="ov2"><div class="card narrow" id="mcard2"></div></div>
+<div id="lb"><img alt=""></div>
+<div id="toast"></div>
+<div id="banner"><span>拖曳紅色圖標到新位置</span><button class="btn sm" id="relCancel">取消</button><button class="btn sm pri" id="relOk">完成</button></div>
+<div id="prog"><div id="progT">產生 PDF 中…</div><div class="bar"><i id="progB"></i></div></div>
+<div id="rpt"></div>
+<input type="file" id="importIn" accept=".json,application/json" hidden>
+
+<script>
+/* ================= 基本工具 ================= */
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-5);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num=v=>{if(v===''||v==null)return null;const n=Number(v);return isFinite(n)?n:null};
+const f1=n=>n==null||!isFinite(n)?'—':(Math.round(n*10)/10).toLocaleString('zh-TW',{maximumFractionDigits:1});
+const f2=n=>n==null||!isFinite(n)?'—':(Math.round(n*100)/100).toLocaleString('zh-TW',{maximumFractionDigits:2});
+const fInt=n=>n==null||!isFinite(n)?'—':Math.round(n).toLocaleString('zh-TW');
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parseYmd=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const dayDiff=(a,b)=>Math.round((Date.UTC(...b.split('-').map((v,i)=>i==1?v-1:+v))-Date.UTC(...a.split('-').map((v,i)=>i==1?v-1:+v)))/864e5);
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const weekStart=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const w=(x.getDay()+6)%7;return addDays(x,-w)};
+const todayStr=()=>ymd(new Date());
+const clone=o=>JSON.parse(JSON.stringify(o));
+const WD=['一','二','三','四','五','六','日'];
+const WDS=['日','一','二','三','四','五','六'];
+const TITLES=['督導','總幹事','主任','組長','管理員','保全'];
+const STAGES=[{k:'recruit',n:'募集線',c:'#e8862d'},{k:'track',n:'追蹤線',c:'#114F9C'},{k:'entrust',n:'已委託',c:'#2e9d5b'}];
+const stg=k=>STAGES.find(s=>s.k===k)||STAGES[0];
+function toast(msg,ms=2400){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),ms)}
+
+/* ================= 儲存（IndexedDB，失敗則 localStorage） ================= */
+const KV={db:null,
+  open(){return new Promise(res=>{try{const r=indexedDB.open('sqjg-farming',1);r.onupgradeneeded=()=>r.result.createObjectStore('kv');r.onsuccess=()=>{this.db=r.result;res(true)};r.onerror=()=>res(false)}catch(e){res(false)}})},
+  get(k){return new Promise(res=>{if(!this.db){try{res(JSON.parse(localStorage.getItem(k)))}catch(e){res(null)}return}
+    try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result??null);q.onerror=()=>res(null)}catch(e){res(null)}})},
+  set(k,v){return new Promise(res=>{if(!this.db){try{localStorage.setItem(k,JSON.stringify(v));res(true)}catch(e){res(false)}return}
+    try{const t=this.db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>res(true);t.onerror=()=>res(false)}catch(e){res(false)}})}
+};
+const DEFAULT_STATE=()=>({version:1,communities:[],shiftPatterns:[{id:'p42',name:'做四休二',work:4,off:2}],settings:{brand:'日勝房屋 業務區長 吳松儒Ryan 0975-711-267'},view:null});
+let S=DEFAULT_STATE();
+let saveT=null;
+function persist(){clearTimeout(saveT);saveT=setTimeout(async()=>{const ok=await KV.set('state',S);if(!ok)toast('⚠️ 儲存失敗（瀏覽器空間不足？請先匯出備份）',4000)},250)}
+
+/* ================= 資料計算 ================= */
+function cAge(c){let y=c.builtYear;if(!y)return null;if(y<1911)y+=1911;return new Date().getFullYear()-y}
+function adYear(y){if(!y)return null;return y<1911?y+1911:y}
+function roomsList(c){const s=new Set();(c.layouts||[]).forEach(l=>{if(l.rooms!=null)s.add(+l.rooms)});if(!s.size)(c.listings||[]).forEach(l=>{if(l.rooms!=null)s.add(+l.rooms)});return [...s].sort((a,b)=>a-b)}
+function roomsStr(c){const r=roomsList(c);return r.length?r.map(x=>x+'房').join('·'):''}
+function unitPrice(l){return l.price>0&&l.ping>0?l.price/l.ping:null}
+function layoutStr(o){if(o.rooms==null&&o.halls==null&&o.baths==null)return '—';return `${o.rooms??'-'}房${o.halls??'-'}廳${o.baths??'-'}衛`}
+function parkStr(l){if(!l.parkCount)return '無';return `${l.parkAccess||''}${l.parkType||''}×${l.parkCount}`}
+function floorsStr(c){const a=c.floorsAbove,b=c.floorsBelow;if(a==null&&b==null)return '—';return `地上${a??'-'}F / 地下${b??0}F`}
+function personName(s){const full=(s.surname||'')+(s.given||'');if(s.given)return full;return (s.surname||'')+(s.gender==='女'?'小姐':'先生')}
+function pattern(id){return S.shiftPatterns.find(p=>p.id===id)||S.shiftPatterns[0]}
+function isWork(st,ds){if(!st.anchor)return null;const p=pattern(st.shiftId);if(!p)return null;const cyc=p.work+p.off;const d=dayDiff(st.anchor,ds);const i=((d%cyc)+cyc)%cyc;return i<p.work}
+function allRoads(){const s=new Set();S.communities.forEach(c=>(c.roads||[]).forEach(r=>r&&s.add(r)));return [...s].sort((a,b)=>a.localeCompare(b,'zh-Hant'))}
+function mean(a){return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
+function roadStats(road){const cs=S.communities.filter(c=>(c.roads||[]).includes(road));const pr=cs.filter(c=>c.avgPrice>0);return {road,cs,priced:pr,avg:mean(pr.map(c=>+c.avgPrice))}}
+function combinedStats(roads){const cs=S.communities.filter(c=>(c.roads||[]).some(r=>roads.includes(r)));const pr=cs.filter(c=>c.avgPrice>0);return {cs,priced:pr,avg:mean(pr.map(c=>+c.avgPrice))}}
+function stageCount(c,k){return (c.listings||[]).filter(l=>l.stage===k).length}
+function diffTag(up,avg){if(!(up>0)||!(avg>0))return '';const d=(up/avg-1)*100;return `<span class="diff ${d>=0?'u':'d'}">${d>=0?'+':''}${f1(d)}%</span>`}
+
+/* ================= 地圖 ================= */
+let map,layer,tempMarker=null,tempGeo=null,geoSeq=0,RS=new Set(),PT='list',relocating=null;
+function initMap(){
+  map=L.map('map',{zoomControl:false}).setView([22.6805,120.3005],15);
+  L.control.zoom({position:'bottomleft'}).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+  layer=L.layerGroup().addTo(map);
+  if(S.view)map.setView([S.view.lat,S.view.lng],S.view.z);
+  else if(S.communities.length)fitAll();
+  map.on('click',e=>{if(relocating)return;placeTemp(e.latlng)});
+  map.on('moveend',()=>{const c=map.getCenter();S.view={lat:c.lat,lng:c.lng,z:map.getZoom()};persist()});
+  map.on('zoomend',applyLabelZoom);applyLabelZoom();
+}
+function applyLabelZoom(){document.body.classList.toggle('nolabel',S.settings.hideLabels||map.getZoom()<14)}
+function fitAll(){const pts=S.communities.map(c=>[c.lat,c.lng]);if(!pts.length)return;if(pts.length===1)map.setView(pts[0],17);else map.fitBounds(pts,{padding:[60,60],maxZoom:17})}
+function markerHtml(c,cls=''){
+  const n=(c.listings||[]).length;const rs=roomsStr(c);
+  return `<div class="cm ${cls}"><div class="pin"></div><div class="lbl"><b>${esc(c.name||'未命名社區')}</b><br><span class="pr">均 ${c.avgPrice>0?f1(+c.avgPrice)+' 萬/坪':'—'}</span>　在售 <b style="font-size:12px">${n}</b>${rs?`<br><span class="ly">${rs}</span>`:''}</div></div>`;
+}
+function renderMarkers(){
+  layer.clearLayers();
+  const hl=RS.size?new Set(combinedStats([...RS]).cs.map(c=>c.id)):null;
+  S.communities.forEach(c=>{
+    const cls=hl?(hl.has(c.id)?'hl':'dim'):'';
+    const m=L.marker([c.lat,c.lng],{icon:L.divIcon({className:'cm-icon',html:markerHtml(c,cls),iconSize:[28,28],iconAnchor:[14,32]}),zIndexOffset:cls==='hl'?500:0,riseOnHover:true});
+    m.on('click',()=>openCommunity(c.id));
+    m.addTo(layer);
+  });
+}
+function tempIcon(){return L.divIcon({className:'cm-icon',html:'<div class="cm tmp"><div class="pin"></div></div>',iconSize:[28,28],iconAnchor:[14,32]})}
+function placeTemp(latlng){
+  cancelTemp();
+  tempMarker=L.marker(latlng,{icon:tempIcon(),draggable:true,zIndexOffset:1000}).addTo(map);
+  tempMarker.bindPopup(popupHtml(),{closeButton:false,offset:[0,-26],autoPan:true}).openPopup();
+  tempMarker.on('dragend',()=>{doRevGeo();tempMarker.openPopup()});
+  doRevGeo();
+}
+function popupHtml(){return `<div class="pp"><div class="addr" id="ppAddr">${tempGeo?esc(tempGeo.display||'（查無地址，可手動輸入）'):'查詢地址中…'}</div><div class="row"><button class="btn pri" onclick="openNew()">＋ 新增</button><button class="btn" onclick="cancelTemp()">取消</button></div><div class="small mut" style="margin-top:6px">可拖曳紅色圖標微調位置</div></div>`}
+function cancelTemp(){if(tempMarker){map.removeLayer(tempMarker);tempMarker=null}tempGeo=null;geoSeq++}
+async function doRevGeo(){
+  tempGeo=null;const my=++geoSeq;const ll=tempMarker.getLatLng();
+  const el=$('#ppAddr');if(el)el.textContent='查詢地址中…';
+  const g=await revGeo(ll.lat,ll.lng);if(my!==geoSeq)return;
+  tempGeo=g||{display:'',road:''};
+  const e2=$('#ppAddr');if(e2)e2.textContent=tempGeo.display||'（查無地址，可手動輸入）';
+  if(E&&E._pendingGeo===my){applyGeoToDraft(tempGeo)}
+}
+async function revGeo(lat,lng){
+  try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&accept-language=zh-TW`);
+    const j=await r.json();const a=j.address||{};
+    const road=a.road||a.pedestrian||'';
+    const display=[a.city||a.county||'',a.suburb||a.city_district||a.town||'',road,a.house_number?(String(a.house_number).replace(/號$/,'')+'號'):''].join('');
+    return {road,display:display||j.display_name||''};
+  }catch(e){return null}
+}
+
+/* ================= 搜尋 ================= */
+let qT=null;
+$('#q').addEventListener('input',e=>{clearTimeout(qT);const v=e.target.value.trim();if(!v){$('#qres').style.display='none';return}qT=setTimeout(()=>doSearch(v),450)});
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){clearTimeout(qT);doSearch(e.target.value.trim())}});
+document.addEventListener('click',e=>{if(!e.target.closest('#searchWrap'))$('#qres').style.display='none';if(!e.target.closest('.menu'))$('#drop').classList.remove('on')});
+async function doSearch(v){
+  if(!v)return;const box=$('#qres');
+  const local=S.communities.filter(c=>(c.name||'').includes(v)||(c.address||'').includes(v)||(c.roads||[]).some(r=>r.includes(v))||(c.builder||'').includes(v));
+  let html=local.length?`<div class="h">已建社區</div>`+local.map(c=>`<div data-cid="${c.id}">🏢 ${esc(c.name)} <span class="mut small">${esc((c.roads||[]).join('、'))}</span></div>`).join(''):'';
+  box.innerHTML=html+`<div class="h">地圖搜尋中…</div>`;box.style.display='block';
+  try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(v)}&countrycodes=tw&limit=6&accept-language=zh-TW&viewbox=120.20,22.80,120.42,22.55`);
+    const j=await r.json();
+    html+=`<div class="h">地圖地點</div>`+(j.length?j.map(p=>`<div data-lat="${p.lat}" data-lng="${p.lon}">📍 ${esc(p.display_name.split(',').slice(0,3).join('，'))}</div>`).join(''):`<div class="h">查無地點</div>`);
+  }catch(e){html+=`<div class="h">地圖搜尋暫時無法使用</div>`}
+  box.innerHTML=html;
+}
+$('#qres').addEventListener('click',e=>{const d=e.target.closest('div[data-cid],div[data-lat]');if(!d)return;$('#qres').style.display='none';
+  if(d.dataset.cid){const c=S.communities.find(x=>x.id===d.dataset.cid);map.setView([c.lat,c.lng],18);openCommunity(c.id)}
+  else{const ll=L.latLng(+d.dataset.lat,+d.dataset.lng);map.setView(ll,18);placeTemp(ll)}});
+
+/* ================= 社區編輯 Modal ================= */
+let E=null,EORIG='',isNew=false,MT='basic',WK=weekStart(new Date()),LF=null,editLid=null;
+const emptyLF=()=>({address:'',floor:'',ping:null,rooms:null,halls:null,baths:null,price:null,parkAccess:'坡道',parkType:'平面',parkCount:0,note:''});
+function newCommunity(ll){return {id:uid(),lat:ll.lat,lng:ll.lng,name:'',builder:'',address:'',roads:[],floorsAbove:null,floorsBelow:null,builtYear:null,households:null,avgPrice:null,note:'',plans:[],layouts:[],staff:[],listings:[],createdAt:Date.now(),updatedAt:Date.now()}}
+function applyGeoToDraft(g){if(!E||!g)return;delete E._pendingGeo;
+  if(!E.address&&g.display){E.address=g.display;const i=document.querySelector('[data-k="address"]');if(i&&!i.value)i.value=g.display}
+  if(g.road&&!E.roads.length){E.roads.push(g.road);if(MT==='basic'){const ch=$('#roadChips');if(ch)ch.innerHTML=roadChipsHtml()}}
+}
+window.openNew=function(){
+  if(!tempMarker)return;const ll=tempMarker.getLatLng();
+  E=newCommunity(ll);isNew=true;
+  if(tempGeo)applyGeoToDraft(tempGeo);else E._pendingGeo=geoSeq;
+  EORIG=JSON.stringify(strip(E));MT='basic';LF=emptyLF();editLid=null;WK=weekStart(new Date());
+  map.closePopup();renderModal();$('#ov').classList.add('on');
+};
+window.cancelTemp=cancelTemp;
+function openCommunity(id,tab='basic'){
+  const c=S.communities.find(x=>x.id===id);if(!c)return;
+  E=clone(c);isNew=false;EORIG=JSON.stringify(strip(E));MT=tab;LF=emptyLF();editLid=null;WK=weekStart(new Date());
+  renderModal();$('#ov').classList.add('on');
+}
+function strip(o){const r={};for(const k in o)if(!k.startsWith('_'))r[k]=o[k];return r}
+function closeModal(force){
+  if(!force&&E&&JSON.stringify(strip(E))!==EORIG&&!confirm('有尚未儲存的變更，確定要關閉嗎？'))return;
+  $('#ov').classList.remove('on');E=null;
+}
+function renderModal(){
+  const L_=E.listings.length;
+  $('#mcard').innerHTML=`
+  <div class="chd"><h3>${isNew?'新增社區':'🏢 '+esc(E.name||'未命名社區')}</h3><button class="close" data-act="close">✕</button></div>
+  <div class="mtabs" id="mtabs">${[['basic','社區基本資料'],['plans','社區平面圖',E.plans.length],['layouts','格局',E.layouts.length],['staff','管理人員',E.staff.length],['listings','在售物件',L_]].map(([k,n,c])=>`<button data-tab="${k}" class="${MT===k?'on':''}">${n}${c?`<span class="cnt">${c}</span>`:''}</button>`).join('')}</div>
+  <div class="cbody" id="cbody">${renderTab()}</div>
+  <div class="cft">${isNew?'':'<button class="btn danger" data-act="delC">刪除社區</button>'}<div class="sp" style="flex:1"></div><button class="btn" data-act="close">取消</button><button class="btn pri" data-act="save">${isNew?'新增社區':'儲存'}</button></div>`;
+}
+function rerenderBody(){const b=$('#cbody');const st=b.scrollTop;b.innerHTML=renderTab();b.scrollTop=st;
+  $('#mtabs').innerHTML=[['basic','社區基本資料'],['plans','社區平面圖',E.plans.length],['layouts','格局',E.layouts.length],['staff','管理人員',E.staff.length],['listings','在售物件',E.listings.length]].map(([k,n,c])=>`<button data-tab="${k}" class="${MT===k?'on':''}">${n}${c?`<span class="cnt">${c}</span>`:''}</button>`).join('')}
+function renderTab(){return {basic:tabBasic,plans:tabPlans,layouts:tabLayouts,staff:tabStaff,listings:tabListings}[MT]()}
+function roadChipsHtml(){return E.roads.length?E.roads.map((r,i)=>`<span class="chip on">${esc(r)}<button class="x" data-act="delRoad" data-i="${i}">×</button></span>`).join(''):'<span class="mut small">尚未設定道路</span>'}
+function ageText(){const a=cAge(E);return a==null?'':`${a} 年（${adYear(E.builtYear)} 年完工）`}
+function tabBasic(){return `
+  <div class="g2">
+    <label class="fld req"><span>社區名稱</span><input data-k="name" value="${esc(E.name)}" placeholder="例：○○大廈"></label>
+    <label class="fld"><span>建商名稱</span><input data-k="builder" value="${esc(E.builder)}" placeholder="例：○○建設"></label>
+  </div>
+  <label class="fld"><span>地址</span><input data-k="address" value="${esc(E.address)}" placeholder="地圖放置後會自動帶入，可修改"></label>
+  <div class="fld"><span>所在道路（可多條，用於道路均價查詢）</span>
+    <div id="roadChips">${roadChipsHtml()}</div>
+    <div class="row" style="flex-wrap:nowrap"><input id="roadIn" list="roadList" placeholder="輸入路名，例：博愛二路"><button class="btn" data-act="addRoad">加入</button></div>
+    <datalist id="roadList">${allRoads().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+  </div>
+  <div class="sub">社區基本資料</div>
+  <div class="g4">
+    <label class="fld"><span>地上樓層</span><input type="number" inputmode="numeric" data-k="floorsAbove" data-num="1" value="${E.floorsAbove??''}" placeholder="層"></label>
+    <label class="fld"><span>地下樓層</span><input type="number" inputmode="numeric" data-k="floorsBelow" data-num="1" value="${E.floorsBelow??''}" placeholder="層"></label>
+    <label class="fld"><span>完工年（民國或西元）</span><input type="number" inputmode="numeric" data-k="builtYear" data-num="1" value="${E.builtYear??''}" placeholder="例：104 或 2015"></label>
+    <label class="fld"><span>屋齡</span><input readonly id="ageOut" value="${ageText()}" placeholder="自動計算"></label>
+  </div>
+  <div class="g4">
+    <label class="fld"><span>成交均價（萬/坪）</span><input type="number" inputmode="decimal" step="0.1" data-k="avgPrice" data-num="1" value="${E.avgPrice??''}" placeholder="例：32.5"></label>
+    <label class="fld"><span>總戶數</span><input type="number" inputmode="numeric" data-k="households" data-num="1" value="${E.households??''}"></label>
+  </div>
+  <label class="fld"><span>備註</span><textarea data-k="note" placeholder="公設、管理費、社區特色、開發重點…">${esc(E.note)}</textarea></label>
+  <div class="row small mut">座標 ${E.lat.toFixed(5)}, ${E.lng.toFixed(5)} ${isNew?'':'<button class="btn sm" data-act="relocate">📍 重新定位圖標</button>'}</div>`}
+function tabPlans(){return `
+  <label class="upload">＋ 上傳社區平面圖（可一次選多張）<input type="file" accept="image/*" multiple id="planIn" hidden></label>
+  <div class="plans">${E.plans.map((p,i)=>`<div class="plan"><img src="${p.src}" data-act="zoom" data-i="${i}" alt=""><div class="pf"><input data-arr="plans" data-i="${i}" data-f="caption" value="${esc(p.caption)}" placeholder="說明，例：A棟 標準層"><button class="ibtn" data-act="delPlan" data-i="${i}">×</button></div></div>`).join('')}</div>
+  ${E.plans.length?'':'<div class="empty">尚未上傳平面圖</div>'}
+  <p class="small mut">圖片會自動壓縮後儲存在本機瀏覽器，並可輸出到 PDF。</p>`}
+function tabLayouts(){return `
+  <div class="hint">每一筆代表一個門號 / 戶別對應的格局，例如「A1 → 3房2廳2衛、42.5 坪」。</div>
+  ${E.layouts.length?`<div class="lrow h"><div>門號 / 戶別</div><div>房</div><div>廳</div><div>衛</div><div>坪數</div><div></div></div>`:''}
+  ${E.layouts.map((l,i)=>`<div class="lrow">
+    <input data-arr="layouts" data-i="${i}" data-f="unit" value="${esc(l.unit)}" placeholder="例：A棟 1號">
+    <input type="number" inputmode="numeric" data-arr="layouts" data-i="${i}" data-f="rooms" data-num="1" value="${l.rooms??''}">
+    <input type="number" inputmode="numeric" data-arr="layouts" data-i="${i}" data-f="halls" data-num="1" value="${l.halls??''}">
+    <input type="number" inputmode="numeric" data-arr="layouts" data-i="${i}" data-f="baths" data-num="1" value="${l.baths??''}">
+    <input type="number" inputmode="decimal" step="0.01" data-arr="layouts" data-i="${i}" data-f="ping" data-num="1" value="${l.ping??''}">
+    <button class="ibtn" data-act="delLayout" data-i="${i}">×</button></div>`).join('')}
+  ${E.layouts.length?'':'<div class="empty">尚無格局資料</div>'}
+  <div class="row" style="margin-top:8px"><button class="btn pri" data-act="addLayout">＋ 新增格局</button>${E.layouts.length?'<button class="btn" data-act="dupLayout">複製上一筆</button>':''}</div>`}
+function tabStaff(){
+  const days=[...Array(7)].map((_,k)=>addDays(WK,k));const t=todayStr();
+  const on=E.staff.filter(s=>isWork(s,t)===true).map(s=>`${s.title} ${personName(s)}${s.period?`（${s.period}）`:''}`);
+  return `
+  <div class="duty">今日（${t.slice(5).replace('-','/')} 週${WDS[new Date().getDay()]}）上班：${on.length?'<b>'+esc(on.join('、'))+'</b>':'<span class="mut">無／尚未設定班表</span>'}</div>
+  <div class="weeknav"><button class="btn sm" data-act="wk" data-d="-7">‹ 上週</button><b>${ymd(days[0]).replace(/-/g,'/')} – ${ymd(days[6]).slice(5).replace('-','/')}</b><button class="btn sm" data-act="wk" data-d="7">下週 ›</button><button class="btn sm ghost" data-act="wk" data-d="0">本週</button></div>
+  <div class="hint">點選人員下方任一天，即設為該班別頻率的「上班第 1 天」，其餘日期依頻率自動推算（藍＝上班、黃＝休假）。</div>
+  ${E.staff.map((s,i)=>`<div class="staff">
+    <div class="srow">
+      <select data-arr="staff" data-i="${i}" data-f="title">${TITLES.map(x=>`<option ${s.title===x?'selected':''}>${x}</option>`).join('')}</select>
+      <input data-arr="staff" data-i="${i}" data-f="surname" value="${esc(s.surname)}" placeholder="姓">
+      <input data-arr="staff" data-i="${i}" data-f="given" value="${esc(s.given)}" placeholder="名字">
+      <select data-arr="staff" data-i="${i}" data-f="gender" data-rr="1"><option ${s.gender==='男'?'selected':''}>男</option><option ${s.gender==='女'?'selected':''}>女</option></select>
+      <select data-arr="staff" data-i="${i}" data-f="shiftId" data-rr="1">${S.shiftPatterns.map(p=>`<option value="${p.id}" ${s.shiftId===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select>
+      <select data-arr="staff" data-i="${i}" data-f="period"><option value="">時段（選填）</option>${['日班','夜班','全天'].map(x=>`<option ${s.period===x?'selected':''}>${x}</option>`).join('')}</select>
+      <button class="ibtn" data-act="delStaff" data-i="${i}">×</button>
+    </div>
+    <div class="week">${days.map((d,k)=>{const ds=ymd(d);const w=isWork(s,ds);return `<div class="day ${w==null?'':w?'w':'o'} ${ds===t?'today':''} ${s.anchor===ds?'anc':''}" data-act="anchor" data-i="${i}" data-d="${ds}"><i>週${WD[k]}</i><b>${d.getMonth()+1}/${d.getDate()}</b><em>${w==null?'—':w?'上班':'休'}</em></div>`}).join('')}</div>
+    ${s.anchor?'':'<div class="small mut" style="margin-top:6px">↑ 尚未設定起始日，請點一天作為上班第 1 天</div>'}
+  </div>`).join('')}
+  ${E.staff.length?'':'<div class="empty">尚無管理人員</div>'}
+  <button class="btn pri" data-act="addStaff">＋ 新增管理人員</button>
+  <details class="shiftset"><summary>班別頻率設定（共 ${S.shiftPatterns.length} 種）</summary>
+    <div style="margin-top:10px">${S.shiftPatterns.map(p=>`<span class="chip">${esc(p.name)}（${p.work+p.off} 天一循環）${S.shiftPatterns.length>1?`<button class="x" data-act="delPat" data-id="${p.id}">×</button>`:''}</span>`).join('')}</div>
+    <div class="row" style="margin-top:6px;flex-wrap:nowrap">上班<input type="number" id="patW" min="1" value="5" style="width:70px">天　休<input type="number" id="patO" min="1" value="2" style="width:70px">天<button class="btn" data-act="addPat">新增班別</button></div>
+  </details>`}
+function lfVal(k){return LF[k]??''}
+function tabListings(){
+  const up=unitPrice(LF);
+  return `
+  <div class="lform">
+    <h4>${editLid?'✏️ 編輯物件':'＋ 新增物件（直接進入募集線）'}</h4>
+    <div class="g2">
+      <label class="fld"><span>地址</span><input data-lf="address" value="${esc(lfVal('address'))}" placeholder="例：${esc(E.address||'○○路○號')}"></label>
+      <label class="fld"><span>樓層</span><input data-lf="floor" value="${esc(lfVal('floor'))}" placeholder="例：8F / 15F"></label>
+    </div>
+    <div class="g4">
+      <label class="fld"><span>坪數</span><input type="number" inputmode="decimal" step="0.01" data-lf="ping" data-num="1" value="${lfVal('ping')}"></label>
+      <label class="fld"><span>房</span><input type="number" inputmode="numeric" data-lf="rooms" data-num="1" value="${lfVal('rooms')}"></label>
+      <label class="fld"><span>廳</span><input type="number" inputmode="numeric" data-lf="halls" data-num="1" value="${lfVal('halls')}"></label>
+      <label class="fld"><span>衛</span><input type="number" inputmode="numeric" data-lf="baths" data-num="1" value="${lfVal('baths')}"></label>
+    </div>
+    <div class="g3">
+      <label class="fld"><span>開價（萬）</span><input type="number" inputmode="decimal" step="0.1" data-lf="price" data-num="1" value="${lfVal('price')}"></label>
+      <label class="fld"><span>單價（萬/坪，開價÷坪數）</span><input readonly id="upOut" value="${up?f2(up):''}" placeholder="自動計算"></label>
+      <label class="fld"><span>社區成交均價</span><input readonly id="avgOut" value="${E.avgPrice>0?f1(+E.avgPrice)+' 萬/坪':'未填（於基本資料）'}"></label>
+    </div>
+    <div class="g3">
+      <label class="fld"><span>車位進出</span><select data-lf="parkAccess">${['坡道','昇降'].map(x=>`<option ${LF.parkAccess===x?'selected':''}>${x}</option>`).join('')}</select></label>
+      <label class="fld"><span>車位型式</span><select data-lf="parkType">${['平面','機械'].map(x=>`<option ${LF.parkType===x?'selected':''}>${x}</option>`).join('')}</select></label>
+      <label class="fld"><span>車位數量</span><input type="number" inputmode="numeric" min="0" data-lf="parkCount" data-num="1" value="${lfVal('parkCount')}"></label>
+    </div>
+    <label class="fld"><span>備註</span><input data-lf="note" value="${esc(lfVal('note'))}" placeholder="屋主狀況、看屋方式…"></label>
+    <div class="row end">${editLid?'<button class="btn" data-act="lfCancel">取消編輯</button><button class="btn pri" data-act="lfSave">更新物件</button>':'<button class="btn gold" data-act="lfAdd">＋ 新增至募集線</button>'}</div>
+  </div>
+  <div class="lanes">${STAGES.map(st=>{const ls=E.listings.filter(l=>l.stage===st.k);return `<div class="lane"><h5><span class="dot" style="background:${st.c}"></span>${st.n}<span class="n">${ls.length}</span></h5>${ls.map(l=>listingCard(l,E,false)).join('')||'<div class="small mut" style="padding:6px">—</div>'}</div>`}).join('')}</div>`}
+function listingCard(l,c,showC){
+  const up=unitPrice(l);const st=stg(l.stage);const a=`data-cid="${c.id}" data-lid="${l.id}"`;
+  const mv=l.stage==='recruit'?`<button class="btn sm pri" data-act="mv" data-to="track" ${a}>轉入追蹤線 →</button>`
+    :l.stage==='track'?`<button class="btn sm" data-act="mv" data-to="recruit" ${a}>← 募集</button><button class="btn sm" style="background:#2e9d5b;border-color:#2e9d5b;color:#fff" data-act="mv" data-to="entrust" ${a}>轉入委託 →</button>`
+    :`<button class="btn sm" data-act="mv" data-to="track" ${a}>← 退回追蹤</button>`;
+  return `<div class="lcard" style="border-left-color:${st.c}">
+    ${showC?`<div class="cn" data-act="openC" data-cid="${c.id}">🏢 ${esc(c.name)}</div>`:''}
+    <div class="a">${esc(l.address||'（未填地址）')} ${l.floor?`<span class="mut">${esc(l.floor)}</span>`:''}</div>
+    <div>${layoutStr(l)}・${l.ping?f2(l.ping)+' 坪':'— 坪'}・車位 ${esc(parkStr(l))}</div>
+    <div class="pz">開價 <b>${l.price?fInt(l.price)+' 萬':'—'}</b>・<span class="up">${up?f2(up)+' 萬/坪':'—'}</span>${diffTag(up,+c.avgPrice)}</div>
+    ${l.note?`<div class="small mut">📝 ${esc(l.note)}</div>`:''}
+    <div class="dt">${st.n} ${l.stageDate||''}</div>
+    <div class="lbtns">${mv}<button class="btn sm ghost" data-act="lEdit" ${a}>編輯</button><button class="btn sm ghost" style="color:#d64545" data-act="lDel" ${a}>刪除</button></div>
+  </div>`}
+
+/* ----- modal 事件 ----- */
+const ov=$('#ov');
+ov.addEventListener('mousedown',e=>{if(e.target===ov)ov._down=true;else ov._down=false});
+ov.addEventListener('click',e=>{if(e.target===ov&&ov._down)closeModal()});
+function onField(e){
+  const t=e.target;if(!E)return;
+  if(t.id==='planIn'){if(e.type==='change')addPlans(t.files);return}
+  const d=t.dataset;
+  if(d.k){E[d.k]=d.num?num(t.value):t.value;if(d.k==='builtYear'){const o=$('#ageOut');if(o)o.value=ageText()}if(d.k==='name'&&!isNew)$('.chd h3').textContent='🏢 '+(t.value||'未命名社區');return}
+  if(d.arr){const o=E[d.arr][+d.i];if(!o)return;o[d.f]=d.num?num(t.value):t.value;if(d.rr&&e.type==='change')rerenderBody();return}
+  if(d.lf){LF[d.lf]=d.num?num(t.value):t.value;if(d.lf==='price'||d.lf==='ping'){const up=unitPrice(LF);$('#upOut').value=up?f2(up):''}}
+}
+$('#mcard').addEventListener('input',onField);
+$('#mcard').addEventListener('change',onField);
+$('#mcard').addEventListener('keydown',e=>{if(e.target.id==='roadIn'&&e.key==='Enter'){e.preventDefault();addRoad()}});
+function addRoad(){const i=$('#roadIn');const v=i.value.trim().replace(/\s+/g,'');if(!v)return;if(!E.roads.includes(v))E.roads.push(v);i.value='';$('#roadChips').innerHTML=roadChipsHtml()}
+$('#mcard').addEventListener('click',e=>{
+  const tb=e.target.closest('[data-tab]');if(tb){MT=tb.dataset.tab;rerenderBody();$('#cbody').scrollTop=0;return}
+  const b=e.target.closest('[data-act]');if(!b)return;const d=b.dataset;const i=+d.i;
+  switch(d.act){
+    case 'close':closeModal();break;
+    case 'save':saveCommunity();break;
+    case 'delC':if(confirm(`確定刪除「${E.name||'未命名社區'}」及其所有資料？此動作無法復原。`)){S.communities=S.communities.filter(c=>c.id!==E.id);persist();closeModal(true);renderAll();toast('已刪除社區')}break;
+    case 'addRoad':addRoad();break;
+    case 'delRoad':E.roads.splice(i,1);$('#roadChips').innerHTML=roadChipsHtml();break;
+    case 'relocate':startRelocate();break;
+    case 'zoom':$('#lb img').src=E.plans[i].src;$('#lb').classList.add('on');break;
+    case 'delPlan':if(confirm('刪除這張平面圖？')){E.plans.splice(i,1);rerenderBody()}break;
+    case 'addLayout':E.layouts.push({id:uid(),unit:'',rooms:null,halls:null,baths:null,ping:null});rerenderBody();focusLast('.lrow input[data-f="unit"]');break;
+    case 'dupLayout':{const p=E.layouts[E.layouts.length-1];E.layouts.push({...p,id:uid(),unit:''});rerenderBody();focusLast('.lrow input[data-f="unit"]');break}
+    case 'delLayout':E.layouts.splice(i,1);rerenderBody();break;
+    case 'wk':WK=d.d==='0'?weekStart(new Date()):addDays(WK,+d.d);rerenderBody();break;
+    case 'anchor':E.staff[i].anchor=d.d;rerenderBody();break;
+    case 'addStaff':E.staff.push({id:uid(),title:'管理員',surname:'',given:'',gender:'男',shiftId:S.shiftPatterns[0].id,period:'',anchor:null});rerenderBody();focusLast('.srow input[data-f="surname"]');break;
+    case 'delStaff':if(confirm('刪除這位管理人員？')){E.staff.splice(i,1);rerenderBody()}break;
+    case 'addPat':{const w=parseInt($('#patW').value),o=parseInt($('#patO').value);if(!(w>0&&o>=0)){toast('請輸入正確天數');break}
+      const nm=o?`做${cn(w)}休${cn(o)}`:`每天上班`;if(S.shiftPatterns.some(p=>p.work===w&&p.off===o)){toast('此班別已存在');break}
+      S.shiftPatterns.push({id:uid(),name:nm,work:w,off:o});persist();rerenderBody();toast('已新增班別：'+nm);break}
+    case 'delPat':{const used=S.communities.some(c=>c.staff.some(s=>s.shiftId===d.id))||E.staff.some(s=>s.shiftId===d.id);if(used){toast('此班別仍有人員使用，無法刪除');break}
+      S.shiftPatterns=S.shiftPatterns.filter(p=>p.id!==d.id);persist();rerenderBody();break}
+    case 'lfAdd':{if(!LF.address&&!LF.floor&&!LF.price){toast('請至少填寫地址、樓層或開價');break}
+      E.listings.push({...LF,id:uid(),stage:'recruit',stageDate:todayStr(),createdAt:Date.now()});LF=emptyLF();rerenderBody();toast('已新增至募集線（記得按儲存）');break}
+    case 'lfSave':{const l=E.listings.find(x=>x.id===editLid);Object.assign(l,LF);editLid=null;LF=emptyLF();rerenderBody();toast('物件已更新');break}
+    case 'lfCancel':editLid=null;LF=emptyLF();rerenderBody();break;
+    case 'lEdit':startEditListing(E.listings.find(x=>x.id===d.lid));break;
+    case 'lDel':if(confirm('刪除此物件？')){E.listings=E.listings.filter(x=>x.id!==d.lid);if(editLid===d.lid){editLid=null;LF=emptyLF()}rerenderBody()}break;
+    case 'mv':{const l=E.listings.find(x=>x.id===d.lid);l.stage=d.to;l.stageDate=todayStr();rerenderBody();toast('已移至'+stg(d.to).n);break}
+  }
+});
+function startEditListing(l){editLid=l.id;LF={...emptyLF(),...clone(l)};['id','stage','stageDate','createdAt'].forEach(k=>delete LF[k]);rerenderBody();$('#cbody').scrollTop=0}
+function focusLast(sel){const a=document.querySelectorAll('#cbody '+sel);if(a.length)a[a.length-1].focus()}
+function cn(n){const m=['零','一','二','三','四','五','六','七','八','九','十'];return n<=10?m[n]:String(n)}
+async function addPlans(files){
+  if(!files||!files.length)return;toast('處理圖片中…');
+  for(const f of files){try{const src=await compressImg(f);E.plans.push({id:uid(),src,caption:f.name.replace(/\.[^.]+$/,'')})}catch(e){toast('無法讀取：'+f.name)}}
+  rerenderBody();toast(`已加入 ${files.length} 張平面圖`);
+}
+function compressImg(file,max=1800){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.86))};img.src=fr.result};fr.readAsDataURL(file)})}
+function saveCommunity(){
+  if(!E.name.trim()){MT='basic';rerenderBody();toast('請填寫社區名稱');setTimeout(()=>{const i=document.querySelector('[data-k="name"]');i&&i.focus()},50);return}
+  if(editLid&&!confirm('物件編輯尚未按「更新物件」，仍要儲存社區嗎？（未更新的修改將不會保存）'))return;
+  if(!editLid&&(LF.address||LF.price||LF.floor)&&!confirm('新增物件表單已有內容但尚未按「新增至募集線」，仍要儲存社區嗎？（該物件不會加入）'))return;
+  E.name=E.name.trim();E.updatedAt=Date.now();const data=strip(E);
+  const idx=S.communities.findIndex(c=>c.id===E.id);if(idx>=0)S.communities[idx]=data;else S.communities.push(data);
+  persist();if(isNew)cancelTemp();closeModal(true);renderAll();toast(isNew?'已新增社區 ✔':'已儲存 ✔');
+}
+/* ----- 重新定位 ----- */
+let relMarker=null;
+function startRelocate(){relocating=E;$('#ov').classList.remove('on');cancelTemp();
+  relMarker=L.marker([E.lat,E.lng],{icon:tempIcon(),draggable:true,zIndexOffset:1000}).addTo(map);map.setView([E.lat,E.lng],Math.max(map.getZoom(),17));$('#banner').classList.add('on')}
+function endRelocate(ok){if(ok){const ll=relMarker.getLatLng();relocating.lat=ll.lat;relocating.lng=ll.lng}map.removeLayer(relMarker);relMarker=null;$('#banner').classList.remove('on');E=relocating;relocating=null;rerenderBody();$('#ov').classList.add('on')}
+$('#relOk').onclick=()=>endRelocate(true);$('#relCancel').onclick=()=>endRelocate(false);
+$('#lb').onclick=()=>$('#lb').classList.remove('on');
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#lb').classList.contains('on'))$('#lb').classList.remove('on');else if($('#ov2').classList.contains('on'))$('#ov2').classList.remove('on');else if($('#ov').classList.contains('on'))closeModal()}});
+
+/* ================= 側邊面板 ================= */
+let listFilter='',listSort='name',pipeStage='all';
+function renderPanel(){
+  const nL=S.communities.reduce((a,c)=>a+c.listings.length,0);
+  $('#ptabs').innerHTML=[['list',`社區（${S.communities.length}）`],['road','道路均價'],['pipe',`物件管線（${nL}）`]].map(([k,n])=>`<button data-pt="${k}" class="${PT===k?'on':''}">${n}</button>`).join('');
+  $('#pbody').innerHTML=PT==='list'?panelList():PT==='road'?panelRoad():panelPipe();
+}
+function panelList(){
+  let cs=S.communities.filter(c=>!listFilter||[c.name,c.builder,c.address,...(c.roads||[])].join(' ').includes(listFilter));
+  cs.sort(listSort==='price'?(a,b)=>(b.avgPrice||0)-(a.avgPrice||0):listSort==='listing'?(a,b)=>b.listings.length-a.listings.length:(a,b)=>(a.name||'').localeCompare(b.name||'','zh-Hant'));
+  if(!S.communities.length)return `<div class="empty" style="margin-top:10px">還沒有社區<br><br>點地圖任一處（或上方「📍放圖標」）放置圖標，再按「＋ 新增」。<br><br><button class="btn" data-pa="demo">載入示範資料看看</button></div>`;
+  return `<div class="row" style="flex-wrap:nowrap;margin-bottom:10px"><input id="lf" placeholder="篩選社區 / 道路 / 建商" value="${esc(listFilter)}"><select id="ls" style="width:120px"><option value="name" ${listSort==='name'?'selected':''}>依名稱</option><option value="price" ${listSort==='price'?'selected':''}>依均價</option><option value="listing" ${listSort==='listing'?'selected':''}>依在售數</option></select></div>
+  ${cs.map(c=>`<div class="citem" data-cid="${c.id}"><div class="t"><b>${esc(c.name)}</b><span class="pr">${c.avgPrice>0?f1(+c.avgPrice)+' 萬/坪':'—'}</span></div>
+    <div class="s">${esc((c.roads||[]).join('、')||'未設道路')}${cAge(c)!=null?'・屋齡 '+cAge(c)+' 年':''}${c.floorsAbove?'・'+c.floorsAbove+'F':''}</div>
+    <div class="s">在售 ${c.listings.length}（募 ${stageCount(c,'recruit')}／追 ${stageCount(c,'track')}／委 ${stageCount(c,'entrust')}）${roomsStr(c)?'・'+roomsStr(c):''}</div></div>`).join('')||'<div class="empty">沒有符合的社區</div>'}`;
+}
+function panelRoad(){
+  const roads=allRoads();
+  if(!roads.length)return `<div class="empty" style="margin-top:10px">尚無道路資料<br>請在社區「基本資料」中設定所在道路</div>`;
+  const sel=[...RS].filter(r=>roads.includes(r));
+  let res='';
+  if(sel.length){
+    const per=sel.map(roadStats);const all=combinedStats(sel);
+    res=`<div class="stat"><div class="small mut">所選 ${sel.length} 條道路・合併平均成交均價</div><div class="big">${all.avg!=null?f2(all.avg):'—'} <small>萬/坪</small></div><div class="small mut">以 ${all.priced.length} 個有填均價的社區平均（共 ${all.cs.length} 個社區，同社區跨多路只算一次）</div></div>
+    <table class="rtable"><thead><tr><th>道路</th><th class="n">社區數</th><th class="n">平均成交均價</th></tr></thead><tbody>${per.map(p=>`<tr><td><b>${esc(p.road)}</b></td><td class="n">${p.priced.length}/${p.cs.length}</td><td class="n"><b>${p.avg!=null?f2(p.avg):'—'}</b></td></tr>`).join('')}</tbody></table>
+    <div class="sechd"><h4>涵蓋社區</h4><button class="btn sm" data-pa="fitRoad">在地圖上顯示</button></div>
+    ${all.cs.sort((a,b)=>(b.avgPrice||0)-(a.avgPrice||0)).map(c=>`<div class="citem" data-cid="${c.id}"><div class="t"><b>${esc(c.name)}</b><span class="pr">${c.avgPrice>0?f1(+c.avgPrice)+' 萬/坪':'未填均價'}</span></div><div class="s">${esc(c.roads.filter(r=>sel.includes(r)).join('、'))}</div></div>`).join('')}
+    <button class="btn block" style="margin-top:6px" data-pa="pdfRoad">📄 以這些道路生成 PDF</button>`;
+  }
+  return `<div class="small mut" style="margin-bottom:8px">點選道路（可複選），計算該路上各社區成交均價的平均。</div>
+  <div>${roads.map(r=>`<button class="chip ${RS.has(r)?'on':''}" data-road="${esc(r)}">${esc(r)} <span style="opacity:.7">${roadStats(r).cs.length}</span></button>`).join('')}</div>
+  ${sel.length?'<button class="btn sm ghost" data-pa="clrRoad">清除選擇</button>':''}${res}`;
+}
+function panelPipe(){
+  const items=[];S.communities.forEach(c=>c.listings.forEach(l=>items.push({c,l})));
+  if(!items.length)return `<div class="empty" style="margin-top:10px">尚無在售物件<br>點社區圖標 →「在售物件」新增</div>`;
+  const tabs=`<div class="row" style="margin-bottom:8px">${[['all','全部'],...STAGES.map(s=>[s.k,s.n])].map(([k,n])=>`<button class="chip ${pipeStage===k?'on':''}" data-ps="${k}">${n} ${k==='all'?items.length:items.filter(x=>x.l.stage===k).length}</button>`).join('')}</div>`;
+  return tabs+STAGES.filter(s=>pipeStage==='all'||pipeStage===s.k).map(s=>{const ls=items.filter(x=>x.l.stage===s.k);return `<div class="sechd"><h4 style="color:${s.c}">● ${s.n}（${ls.length}）</h4></div>${ls.map(x=>listingCard(x.l,x.c,true)).join('')||'<div class="small mut">—</div>'}`}).join('');
+}
+$('#panel').addEventListener('click',e=>{
+  const pt=e.target.closest('[data-pt]');if(pt){PT=pt.dataset.pt;renderPanel();return}
+  const rd=e.target.closest('[data-road]');if(rd){const r=rd.dataset.road;RS.has(r)?RS.delete(r):RS.add(r);renderPanel();renderMarkers();return}
+  const ps=e.target.closest('[data-ps]');if(ps){pipeStage=ps.dataset.ps;renderPanel();return}
+  const pa=e.target.closest('[data-pa]');if(pa){const a=pa.dataset.pa;
+    if(a==='clrRoad'){RS.clear();renderPanel();renderMarkers()}
+    if(a==='fitRoad'){const cs=combinedStats([...RS]).cs;if(cs.length){map.fitBounds(cs.map(c=>[c.lat,c.lng]),{padding:[70,70],maxZoom:17});closePanelMobile()}}
+    if(a==='pdfRoad')openPdf('road',[...RS]);
+    if(a==='demo')loadDemo();return}
+  const act=e.target.closest('[data-act]');
+  if(act){const d=act.dataset;const c=S.communities.find(x=>x.id===d.cid);if(!c)return;
+    if(d.act==='openC'){openCommunity(c.id,'listings');return}
+    const l=c.listings.find(x=>x.id===d.lid);
+    if(d.act==='mv'){l.stage=d.to;l.stageDate=todayStr();persist();renderAll();toast(`「${l.address||'物件'}」已移至${stg(d.to).n}`)}
+    if(d.act==='lEdit'){openCommunity(c.id,'listings');startEditListing(l)}
+    if(d.act==='lDel'&&confirm('刪除此物件？')){c.listings=c.listings.filter(x=>x.id!==l.id);persist();renderAll()}
+    return}
+  const ci=e.target.closest('.citem');if(ci){const c=S.communities.find(x=>x.id===ci.dataset.cid);map.setView([c.lat,c.lng],Math.max(map.getZoom(),17));closePanelMobile();openCommunity(c.id)}
+});
+$('#panel').addEventListener('input',e=>{if(e.target.id==='lf'){listFilter=e.target.value;const p=e.target.selectionStart;renderPanel();const i=$('#lf');i.focus();i.setSelectionRange(p,p)}});
+$('#panel').addEventListener('change',e=>{if(e.target.id==='ls'){listSort=e.target.value;renderPanel()}});
+const isMobile=()=>matchMedia('(max-width:860px)').matches;
+function closePanelMobile(){if(isMobile())document.body.classList.remove('panel-open')}
+$('#btnPanel').onclick=()=>{if(isMobile())document.body.classList.toggle('panel-open');else{document.body.classList.toggle('panel-off');setTimeout(()=>map.invalidateSize(),50)}};
+function renderAll(){renderMarkers();renderPanel()}
+
+/* ================= 頂部按鈕 / 選單 ================= */
+$('#btnPin').onclick=()=>{closePanelMobile();placeTemp(map.getCenter())};
+$('#btnMenu').onclick=e=>{e.stopPropagation();$('#drop').classList.toggle('on')};
+$('#drop').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;$('#drop').classList.remove('on');
+  ({labels(){S.settings.hideLabels=!S.settings.hideLabels;persist();applyLabelZoom();toast(S.settings.hideLabels?'已隱藏標籤':'已顯示標籤（縮放 14 級以上）')},
+    fit(){S.communities.length?fitAll():toast('尚無社區')},
+    export:exportJSON,import(){$('#importIn').click()},brand:openBrand,demo:loadDemo,
+    clear(){if(confirm('確定清除全部社區資料？建議先匯出備份。')&&confirm('再次確認：清除後無法復原。')){const keep=S.settings;S=DEFAULT_STATE();S.settings=keep;RS.clear();persist();renderAll();toast('已清除')}}})[b.dataset.m]()});
+function exportJSON(){const blob=new Blob([JSON.stringify(S)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`商圈精耕備份_${todayStr()}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('已匯出備份')}
+$('#importIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const d=JSON.parse(await f.text());if(!d||!Array.isArray(d.communities))throw 0;
+    if(!confirm(`備份內含 ${d.communities.length} 個社區。\n按「確定」以備份取代目前資料。`))return;
+    S={...DEFAULT_STATE(),...d};if(!S.shiftPatterns?.length)S.shiftPatterns=DEFAULT_STATE().shiftPatterns;migrate();persist();RS.clear();renderAll();fitAll();toast('匯入完成')}
+  catch(err){toast('檔案格式不正確')}};
+function migrate(){S.settings=S.settings||{};if(!S.settings.brand)S.settings.brand=DEFAULT_STATE().settings.brand;
+  S.communities.forEach(c=>{['roads','plans','layouts','staff','listings'].forEach(k=>{if(!Array.isArray(c[k]))c[k]=[]})})}
+function openBrand(){
+  $('#mcard2').innerHTML=`<div class="chd"><h3>報告署名設定</h3><button class="close" onclick="$('#ov2').classList.remove('on')">✕</button></div>
+  <div class="cbody"><label class="fld"><span>PDF 封面與頁尾署名</span><input id="brandIn" value="${esc(S.settings.brand)}"></label></div>
+  <div class="cft"><div style="flex:1"></div><button class="btn pri" id="brandOk">儲存</button></div>`;
+  $('#ov2').classList.add('on');$('#brandOk').onclick=()=>{S.settings.brand=$('#brandIn').value.trim()||DEFAULT_STATE().settings.brand;persist();$('#ov2').classList.remove('on');toast('已更新署名')}}
+
+/* ================= 示範資料 ================= */
+function loadDemo(){
+  if(S.communities.some(c=>c._demo||String(c.name).includes('（範例）'))){toast('示範資料已載入');return}
+  const t=todayStr();const mon=ymd(weekStart(new Date()));
+  const mk=(name,lat,lng,o)=>({...newCommunity({lat,lng}),name,...o});
+  const p=S.shiftPatterns[0].id;
+  const demo=[
+    mk('示範社區A（範例）',22.6838,120.2985,{builder:'範例建設',address:'高雄市左營區博愛二路（範例）',roads:['博愛二路','重愛路'],floorsAbove:15,floorsBelow:3,builtYear:105,households:168,avgPrice:36.8,
+      layouts:[{id:uid(),unit:'A1',rooms:3,halls:2,baths:2,ping:42.5},{id:uid(),unit:'A2',rooms:2,halls:2,baths:1,ping:31.2},{id:uid(),unit:'B1',rooms:4,halls:2,baths:2,ping:55.8}],
+      staff:[{id:uid(),title:'總幹事',surname:'王',given:'',gender:'男',shiftId:p,period:'日班',anchor:mon},{id:uid(),title:'保全',surname:'林',given:'',gender:'女',shiftId:p,period:'夜班',anchor:ymd(addDays(weekStart(new Date()),2))}],
+      listings:[{id:uid(),address:'博愛二路（範例）',floor:'8F/15F',ping:42.5,rooms:3,halls:2,baths:2,price:1588,parkAccess:'坡道',parkType:'平面',parkCount:1,note:'',stage:'recruit',stageDate:t},
+        {id:uid(),address:'博愛二路（範例）',floor:'12F/15F',ping:31.2,rooms:2,halls:2,baths:1,price:1180,parkAccess:'坡道',parkType:'機械',parkCount:1,note:'',stage:'track',stageDate:t}]}),
+    mk('示範社區B（範例）',22.6792,120.3031,{builder:'範例營造',address:'高雄市左營區重愛路（範例）',roads:['重愛路'],floorsAbove:12,floorsBelow:2,builtYear:2009,households:96,avgPrice:29.5,
+      layouts:[{id:uid(),unit:'1號',rooms:3,halls:2,baths:2,ping:38}],staff:[],listings:[{id:uid(),address:'重愛路（範例）',floor:'5F/12F',ping:38,rooms:3,halls:2,baths:2,price:1050,parkAccess:'昇降',parkType:'平面',parkCount:1,note:'',stage:'entrust',stageDate:t}]}),
+    mk('示範社區C（範例）',22.6862,120.3052,{builder:'範例開發',address:'高雄市左營區博愛二路（範例）',roads:['博愛二路'],floorsAbove:22,floorsBelow:4,builtYear:111,households:240,avgPrice:42.3,
+      layouts:[{id:uid(),unit:'C1',rooms:4,halls:2,baths:3,ping:68},{id:uid(),unit:'C2',rooms:3,halls:2,baths:2,ping:48}],staff:[],listings:[]})
+  ];
+  S.communities.push(...demo);persist();renderAll();fitAll();toast('已載入 3 筆示範資料（名稱標註「範例」，可直接刪除）',3500);
+}
+
+/* ================= PDF ================= */
+let PDF={mode:'community',cids:new Set(),roads:new Set(),cover:true,staff:true,listings:true,plans:true,detail:true};
+function openPdf(mode,roads){
+  if(!S.communities.length){toast('尚無社區可輸出');return}
+  if(mode)PDF.mode=mode;if(roads){PDF.roads=new Set(roads)}
+  renderPdfModal();$('#ov2').classList.add('on');
+}
+$('#btnPdf').onclick=()=>openPdf();
+function renderPdfModal(){
+  const roads=allRoads();const P=PDF;
+  if(P.mode==='road'&&!P.roads.size&&RS.size)P.roads=new Set(RS);
+  const modes=[['community','以社區為單位生成','勾選要輸出的社區'],['road','以道路為單位生成','可複選道路，附道路均價彙整'],['all','全部社區生成',`共 ${S.communities.length} 個社區`]];
+  let pick='';
+  if(P.mode==='community')pick=`<div class="row"><b class="small">選擇社區</b><button class="btn sm ghost" data-pp="allC">全選</button><button class="btn sm ghost" data-pp="noneC">清除</button></div><div class="cklist">${S.communities.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','zh-Hant')).map(c=>`<label><input type="checkbox" data-pc="${c.id}" ${P.cids.has(c.id)?'checked':''}>${esc(c.name)} <span class="mut small">${esc((c.roads||[]).join('、'))}</span></label>`).join('')}</div>`;
+  if(P.mode==='road')pick=roads.length?`<div class="row"><b class="small">選擇道路（複選）</b><button class="btn sm ghost" data-pp="allR">全選</button><button class="btn sm ghost" data-pp="noneR">清除</button></div><div class="cklist">${roads.map(r=>{const s=roadStats(r);return `<label><input type="checkbox" data-pr="${esc(r)}" ${P.roads.has(r)?'checked':''}>${esc(r)} <span class="mut small">${s.cs.length} 社區・均 ${s.avg!=null?f1(s.avg):'—'}</span></label>`}).join('')}</div>
+    <label class="ck"><input type="checkbox" data-po="detail" ${P.detail?'checked':''}>附上各社區詳細頁</label>`:`<div class="empty">尚無道路資料</div>`;
+  $('#mcard2').innerHTML=`<div class="chd"><h3>📄 生成 PDF 報告</h3><button class="close" data-pp="x">✕</button></div>
+  <div class="cbody pdfopt">
+    ${modes.map(([k,n,s])=>`<label class="r ${P.mode===k?'on':''}"><input type="radio" name="pm" value="${k}" ${P.mode===k?'checked':''}>${n}<span class="mut small" style="font-weight:400;margin-left:auto">${s}</span></label>`).join('')}
+    <div style="margin-top:12px">${pick}</div>
+    <div class="sub">內容</div>
+    <label class="ck"><input type="checkbox" data-po="cover" ${P.cover?'checked':''}>封面</label>
+    <label class="ck"><input type="checkbox" data-po="staff" ${P.staff?'checked':''}>管理人員與 14 天班表</label>
+    <label class="ck"><input type="checkbox" data-po="listings" ${P.listings?'checked':''}>在售物件明細</label>
+    <label class="ck"><input type="checkbox" data-po="plans" ${P.plans?'checked':''}>社區平面圖</label>
+  </div>
+  <div class="cft"><button class="btn" data-pp="print">🖨️ 列印版</button><div style="flex:1"></div><button class="btn pri" data-pp="go">⬇️ 下載 PDF</button></div>`;
+}
+$('#mcard2').addEventListener('change',e=>{const t=e.target;if(!$('.pdfopt'))return;
+  if(t.name==='pm'){PDF.mode=t.value;renderPdfModal();return}
+  if(t.dataset.pc){t.checked?PDF.cids.add(t.dataset.pc):PDF.cids.delete(t.dataset.pc)}
+  if(t.dataset.pr){t.checked?PDF.roads.add(t.dataset.pr):PDF.roads.delete(t.dataset.pr)}
+  if(t.dataset.po){PDF[t.dataset.po]=t.checked}});
+$('#mcard2').addEventListener('click',e=>{const b=e.target.closest('[data-pp]');if(!b)return;const a=b.dataset.pp;
+  if(a==='x')$('#ov2').classList.remove('on');
+  if(a==='allC'){S.communities.forEach(c=>PDF.cids.add(c.id));renderPdfModal()}
+  if(a==='noneC'){PDF.cids.clear();renderPdfModal()}
+  if(a==='allR'){allRoads().forEach(r=>PDF.roads.add(r));renderPdfModal()}
+  if(a==='noneR'){PDF.roads.clear();renderPdfModal()}
+  if(a==='go'||a==='print'){const r=buildReport();if(!r)return;$('#ov2').classList.remove('on');a==='go'?makePDF(r):printReport(r)}});
+$('#ov2').addEventListener('click',e=>{if(e.target.id==='ov2')$('#ov2').classList.remove('on')});
+
+function buildReport(){
+  const P=PDF;let cs=[],title='',sub='',secs='';const date=todayStr().replace(/-/g,'/');
+  if(P.mode==='community'){cs=S.communities.filter(c=>P.cids.has(c.id));if(!cs.length){toast('請至少勾選一個社區');return null}
+    title=cs.length===1?cs[0].name:`${cs[0].name} 等 ${cs.length} 個社區`;sub='社區精耕資料';}
+  else if(P.mode==='road'){const roads=[...P.roads].filter(r=>allRoads().includes(r));if(!roads.length){toast('請至少勾選一條道路');return null}
+    cs=combinedStats(roads).cs;title=roads.join('、');sub='道路成交均價與社區資料';
+    secs+=rptRoads(roads);}
+  else{cs=S.communities.slice();title='全部社區';sub=`商圈內 ${cs.length} 個社區總覽`;secs+=rptOverview(cs);}
+  cs=cs.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','zh-Hant'));
+  if(P.mode!=='road'||P.detail)secs+=cs.map(c=>rptCommunity(c,P)).join('');
+  const cover=P.cover?rptCover(title,sub,cs):'';
+  const fname=`商圈精耕_${P.mode==='all'?'全部社區':title.slice(0,30)}_${todayStr()}`.replace(/[\\/:*?"<>|]/g,'');
+  return {html:cover+secs,fname,date};
+}
+function rptCover(title,sub,cs){
+  const nL=cs.reduce((a,c)=>a+c.listings.length,0),nE=cs.reduce((a,c)=>a+stageCount(c,'entrust'),0);const pr=cs.filter(c=>c.avgPrice>0);const av=mean(pr.map(c=>+c.avgPrice));
+  return `<section class="rpt-sec cover"><div class="cv-band"></div><div class="cv-band2"></div>
+  <div class="cv-top"><i>日</i>日勝房屋｜商圈精耕</div>
+  <div class="cv-main"><span class="cv-k">商圈精耕報告</span><h1>${esc(title)}</h1><p>${esc(sub)}</p></div>
+  <div class="cv-stats"><div><small>社區數</small><b>${cs.length}</b></div><div><small>在售物件</small><b>${nL}</b></div><div><small>已委託</small><b>${nE}</b></div><div><small>平均成交均價</small><b>${av!=null?f1(av):'—'}</b><small>萬/坪</small></div></div>
+  <div class="cv-foot">${esc(S.settings.brand)}<br><span style="opacity:.75">製表日期 ${todayStr().replace(/-/g,'/')}</span></div></section>`;
+}
+function rptOverview(cs){
+  const s=cs.slice().sort((a,b)=>(b.avgPrice||0)-(a.avgPrice||0));const av=mean(cs.filter(c=>c.avgPrice>0).map(c=>+c.avgPrice));
+  return `<section class="rpt-sec"><h2>全部社區總覽</h2>
+  <div class="tot pb">全部社區平均成交均價　<b>${av!=null?f2(av):'—'}</b> 萬/坪<span style="color:#6b7686;font-size:12px">（${cs.filter(c=>c.avgPrice>0).length} 個有填均價的社區）</span></div>
+  <table><thead><tr><th>社區</th><th>道路</th><th class="n">屋齡</th><th>樓層</th><th>格局</th><th class="n">成交均價</th><th class="n">在售</th><th class="n">委託</th></tr></thead><tbody>
+  ${s.map(c=>`<tr><td><b>${esc(c.name)}</b><br><span style="color:#6b7686;font-size:11px">${esc(c.builder||'')}</span></td><td>${esc((c.roads||[]).join('、'))}</td><td class="n">${cAge(c)??'—'}</td><td>${c.floorsAbove??'-'}F/B${c.floorsBelow??0}</td><td>${roomsStr(c)||'—'}</td><td class="n"><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b></td><td class="n">${c.listings.length}</td><td class="n">${stageCount(c,'entrust')}</td></tr>`).join('')}
+  </tbody></table></section>`;
+}
+function rptRoads(roads){
+  const per=roads.map(roadStats);const all=combinedStats(roads);
+  return `<section class="rpt-sec"><h2>道路成交均價彙整</h2>
+  <table class="pb"><thead><tr><th>道路</th><th class="n">社區數</th><th class="n">有均價社區</th><th class="n">平均成交均價（萬/坪）</th></tr></thead><tbody>
+  ${per.map(p=>`<tr><td><b>${esc(p.road)}</b></td><td class="n">${p.cs.length}</td><td class="n">${p.priced.length}</td><td class="n"><b>${p.avg!=null?f2(p.avg):'—'}</b></td></tr>`).join('')}</tbody></table>
+  ${roads.length>1?`<div class="tot pb">所選 ${roads.length} 條道路合併平均　<b>${all.avg!=null?f2(all.avg):'—'}</b> 萬/坪<span style="color:#6b7686;font-size:12px">（${all.priced.length} 個社區，同社區跨多路只算一次）</span></div>`:''}
+  ${per.map(p=>`<h3>${esc(p.road)}<span class="r">平均 ${p.avg!=null?f2(p.avg):'—'} 萬/坪</span></h3>
+    ${p.cs.length?`<table><thead><tr><th>社區</th><th>建商</th><th class="n">屋齡</th><th>樓層</th><th>格局</th><th class="n">成交均價</th><th class="n">在售</th></tr></thead><tbody>
+    ${p.cs.slice().sort((a,b)=>(b.avgPrice||0)-(a.avgPrice||0)).map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.builder||'—')}</td><td class="n">${cAge(c)??'—'}</td><td>${c.floorsAbove??'-'}F/B${c.floorsBelow??0}</td><td>${roomsStr(c)||'—'}</td><td class="n"><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b></td><td class="n">${c.listings.length}</td></tr>`).join('')}</tbody></table>`:'<div class="none">無社區</div>'}`).join('')}
+  </section>`;
+}
+function rptCommunity(c,P){
+  const days=[...Array(14)].map((_,k)=>addDays(new Date(),k));
+  const age=cAge(c);
+  let h=`<section class="rpt-sec">
+  <div class="r-head pb"><div class="r-t">${esc(c.name)}</div><div class="r-s">${esc(c.builder||'建商未填')}　｜　${esc(c.address||'地址未填')}</div>${(c.roads||[]).length?`<div class="r-roads">${c.roads.map(r=>`<span>${esc(r)}</span>`).join('')}</div>`:''}</div>
+  <div class="r-kpis pb"><div class="gold"><small>成交均價</small><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b> <small style="display:inline">萬/坪</small></div><div><small>屋齡</small><b>${age!=null?age+' 年':'—'}</b></div><div><small>樓層</small><b style="font-size:14px">${c.floorsAbove??'-'}F / B${c.floorsBelow??0}</b></div><div><small>總戶數</small><b>${c.households??'—'}</b></div><div><small>在售（募/追/委）</small><b style="font-size:14px">${c.listings.length}（${stageCount(c,'recruit')}/${stageCount(c,'track')}/${stageCount(c,'entrust')}）</b></div></div>
+  <h3>格局配置</h3>${c.layouts.length?`<table><thead><tr><th>門號 / 戶別</th><th>格局</th><th class="n">坪數</th></tr></thead><tbody>${c.layouts.map(l=>`<tr><td>${esc(l.unit||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping!=null?f2(l.ping):'—'}</td></tr>`).join('')}</tbody></table>`:'<div class="none">尚無格局資料</div>'}`;
+  if(P.staff){h+=`<h3>管理人員與班表（${ymd(days[0]).slice(5).replace('-','/')} 起 14 天）</h3>`;
+    h+=c.staff.length?`<table class="sch"><thead><tr><th style="width:62px">職稱</th><th style="width:78px">姓名</th><th style="width:62px">班別</th>${days.map(d=>`<th class="d">${d.getMonth()+1}/${d.getDate()}<br>${WDS[d.getDay()]}</th>`).join('')}</tr></thead><tbody>
+    ${c.staff.map(s=>`<tr><td>${esc(s.title)}</td><td>${esc(personName(s))}<br><span style="color:#6b7686;font-size:10.5px">${s.gender==='女'?'女':'男'}${s.period?'・'+esc(s.period):''}</span></td><td style="font-size:11.5px">${esc(pattern(s.shiftId)?.name||'')}</td>${days.map(d=>{const w=isWork(s,ymd(d));return `<td class="d ${w==null?'':w?'w':'o'}">${w==null?'—':w?'班':'休'}</td>`}).join('')}</tr>`).join('')}</tbody></table>`:'<div class="none">尚無管理人員資料</div>'}
+  if(P.listings){h+=`<h3>在售物件</h3>`;
+    h+=c.listings.length?`<table><thead><tr><th>階段</th><th>地址</th><th>樓層</th><th>格局</th><th class="n">坪數</th><th class="n">開價(萬)</th><th class="n">單價(萬/坪)</th><th>車位</th></tr></thead><tbody>
+    ${STAGES.flatMap(st=>c.listings.filter(l=>l.stage===st.k).map(l=>{const up=unitPrice(l);return `<tr><td><span class="stg" style="background:${st.c}">${st.n}</span></td><td>${esc(l.address||'—')}${l.note?`<br><span style="color:#6b7686;font-size:11px">${esc(l.note)}</span>`:''}</td><td>${esc(l.floor||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping?f2(l.ping):'—'}</td><td class="n"><b>${l.price?fInt(l.price):'—'}</b></td><td class="n">${up?f2(up):'—'}</td><td>${esc(parkStr(l))}</td></tr>`})).join('')}</tbody></table>`:'<div class="none">目前無在售物件</div>'}
+  if(c.note)h+=`<h3>備註</h3><div class="note pb">${esc(c.note)}</div>`;
+  if(P.plans&&c.plans.length)h+=`<h3>社區平面圖</h3>`+c.plans.map(p=>`<div class="plan-img pb"><img src="${p.src}"><div>${esc(p.caption||'')}</div></div>`).join('');
+  return h+`</section>`;
+}
+function waitImgs(el){return Promise.all([...el.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})))}
+function footerImg(n,t){const c=document.createElement('canvas');c.width=1520;c.height=48;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,1520,48);x.fillStyle='#114F9C';x.fillRect(0,0,1520,3);x.fillStyle='#F4CD3B';x.fillRect(0,0,160,3);
+  x.font='500 21px "Noto Sans TC","Noto Sans CJK TC",sans-serif';x.textBaseline='middle';x.fillStyle='#114F9C';x.fillText(S.settings.brand,0,28);x.textAlign='right';x.fillStyle='#6b7686';x.fillText(`商圈精耕報告 ｜ ${todayStr().replace(/-/g,'/')} ｜ 第 ${n} / ${t} 頁`,1520,28);return c.toDataURL('image/png')}
+async function makePDF(r){
+  if(!window.html2canvas||!window.jspdf){toast('PDF 元件載入失敗，請確認網路後重新整理，或改用「列印版」',4000);return}
+  const host=$('#rpt');host.innerHTML=r.html;const pg=$('#prog');pg.classList.add('on');$('#progB').style.width='0';$('#progT').textContent='產生 PDF 中…';
+  try{
+    await waitImgs(host);if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4',compress:true});
+    const MM=190/760,TOP=11,X=10,PH=Math.floor(270/MM);
+    const pages=[];const secs=[...host.querySelectorAll('.rpt-sec')];
+    for(let si=0;si<secs.length;si++){
+      const sec=secs[si];$('#progT').textContent=`產生 PDF 中…（${si+1}/${secs.length}）`;$('#progB').style.width=Math.round(si/secs.length*100)+'%';
+      await new Promise(r=>setTimeout(r,20));
+      const canvas=await html2canvas(sec,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+      const sr=sec.getBoundingClientRect();const H=sr.height;const sc=canvas.width/sr.width;
+      const cands=[...sec.querySelectorAll('.pb,tbody tr,h3')].map(el=>{const b=el.getBoundingClientRect();return el.tagName==='H3'?b.top-sr.top-4:b.bottom-sr.top+1}).filter(y=>y>0&&y<H).sort((a,b)=>a-b);
+      let start=0;
+      while(start<H-2){let end=start+PH;if(end>=H)end=H;else{const ok=cands.filter(y=>y>start+PH*.35&&y<=end);if(ok.length)end=ok[ok.length-1]}
+        const pc=document.createElement('canvas');pc.width=canvas.width;pc.height=Math.max(1,Math.round((end-start)*sc));const cx=pc.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,pc.width,pc.height);
+        cx.drawImage(canvas,0,Math.round(start*sc),pc.width,pc.height,0,0,pc.width,pc.height);
+        pages.push({img:pc.toDataURL('image/jpeg',.9),h:(end-start)*MM,cover:sec.classList.contains('cover')});start=end}
+    }
+    pages.forEach((p,i)=>{if(i)pdf.addPage();pdf.addImage(p.img,'JPEG',X,TOP,190,p.h);if(!p.cover)pdf.addImage(footerImg(i+1,pages.length),'PNG',X,285,190,6)});
+    $('#progB').style.width='100%';
+    pdf.save(r.fname+'.pdf');toast(`PDF 已產生（${pages.length} 頁）`);
+  }catch(err){console.error(err);toast('PDF 產生失敗：'+(err.message||err),4000)}
+  finally{pg.classList.remove('on');host.innerHTML=''}
+}
+function printReport(r){
+  const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
+  const w=window.open('','_blank');if(!w){toast('請允許彈出視窗後再試');return}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(r.fname)}</title><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet"><style>${css}
+  html,body{background:#fff;height:auto}@page{size:A4;margin:11mm 10mm 12mm}body{margin:0}.rpt-sec{margin:0 auto;break-after:page;-webkit-print-color-adjust:exact;print-color-adjust:exact}.rpt-sec:last-child{break-after:auto}.rpt-sec.cover{height:270mm}tr,.pb,.plan-img{break-inside:avoid}h3{break-after:avoid}</style></head><body>${r.html}<script>window.onload=()=>setTimeout(()=>window.print(),600)<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ================= 啟動 ================= */
+(async()=>{
+  await KV.open();
+  const d=await KV.get('state');
+  if(d&&Array.isArray(d.communities)){S={...DEFAULT_STATE(),...d};if(!S.shiftPatterns?.length)S.shiftPatterns=DEFAULT_STATE().shiftPatterns}
+  migrate();
+  $('#brandSmall').textContent='日勝房屋・商圈精耕';
+  if(!window.L){document.getElementById('map').innerHTML='<div class="empty" style="margin:80px 20px;background:#fff">地圖元件載入失敗，請確認網路連線後重新整理。</div>';renderPanel();return}
+  initMap();renderAll();
+  if(!S.communities.length)setTimeout(()=>toast('點地圖任一處放置圖標，再按「＋ 新增」建立社區',4000),600);
+})();
+</script>
+</body>
+</html>
