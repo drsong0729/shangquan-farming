@@ -310,6 +310,9 @@ details.shiftset summary{font-weight:700;cursor:pointer;color:var(--pri)}
 .rpt-sec .r-plans img{max-width:100%;max-height:560px;display:block;margin:0 auto}
 .rpt-sec .r-plans.multi img{max-height:300px}
 .r-kpis .sage{background:#eef6f1;border-color:#cfe5d8}
+.rpt-sec .rdiff{display:inline-block;font-weight:900;font-size:11.5px;border-radius:6px;padding:0 6px;background:#eef1f5;color:#6b7686}
+.rpt-sec .rdiff.u{background:#fbe9e7;color:#b9625c}
+.rpt-sec .rdiff.d{background:#e6f3ec;color:#4f8a6b}
 .r-kpis .sage b{color:#4f8a6b}
 .r-kpis div{border:1px solid #e3e9f1;background:#f8fafc;border-radius:11px;padding:8px 10px}
 .r-kpis small{display:block;color:#7d8a9c;font-size:11px}
@@ -1000,20 +1003,22 @@ function rptRoads(roads){
     ${p.cs.slice().sort((a,b)=>(b.avgPrice||0)-(a.avgPrice||0)).map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.builder||'—')}</td><td class="n">${cAge(c)??'—'}</td><td>${c.floorsAbove??'-'}F/B${c.floorsBelow??0}</td><td>${roomsStr(c)||'—'}</td><td class="n"><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b></td><td class="n">${listAvg(c)!=null?f2(listAvg(c)):'—'}</td><td class="n">${c.listings.length}</td></tr>`).join('')}</tbody></table>`:'<div class="none">無社區</div>'}`).join('')}
   </section>`;
 }
+function rptDiff(up,avg){if(!(up>0)||!(avg>0))return '<span style="color:#9aa5b4">—</span>';const d=(up/avg-1)*100;const r=Math.round(d*10)/10;
+  return `<span class="rdiff ${r>0?'u':r<0?'d':''}">${r>0?'+':''}${f1(r)}%</span>`}
 function rptCommunity(c,P){
   const days=[...Array(14)].map((_,k)=>addDays(new Date(),k));
   const age=cAge(c),la=listAvg(c),pls=(c.plans||[]).filter(p=>p.src);
   let h=`<section class="rpt-sec">
   <div class="r-head pb"><div class="r-t">${esc(c.name)}</div><div class="r-s">${esc(c.builder||'建商未填')}　｜　${esc(c.address||'地址未填')}</div>${(c.roads||[]).length?`<div class="r-roads">${c.roads.map(r=>`<span>${esc(r)}</span>`).join('')}</div>`:''}</div>
   ${P.plans&&pls.length?`<div class="r-plans ${pls.length>1?'multi':''}">${pls.map(p=>`<div class="pb"><img src="${p.src}"></div>`).join('')}</div>`:''}
-  <div class="r-kpis pb"><div class="gold"><small>成交均價</small><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b> <small style="display:inline">萬/坪</small></div><div class="sage"><small>在售均價</small><b>${la!=null?f2(la):'—'}</b> <small style="display:inline">萬/坪</small></div><div><small>屋齡</small><b>${age!=null?age+' 年':'—'}</b></div><div><small>樓層</small><b style="font-size:14px">${c.floorsAbove??'-'}F / B${c.floorsBelow??0}</b></div><div><small>總戶數</small><b>${c.households??'—'}</b></div><div><small>在售（募/追/委）</small><b style="font-size:14px">${c.listings.length}（${stageCount(c,'recruit')}/${stageCount(c,'track')}/${stageCount(c,'entrust')}）</b></div></div>
+  <div class="r-kpis pb"><div class="gold"><small>成交均價</small><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b> <small style="display:inline">萬/坪</small></div><div class="sage"><small>在售均價</small><b>${la!=null?f2(la):'—'}</b> <small style="display:inline">萬/坪</small> ${rptDiff(la,+c.avgPrice)}</div><div><small>屋齡</small><b>${age!=null?age+' 年':'—'}</b></div><div><small>樓層</small><b style="font-size:14px">${c.floorsAbove??'-'}F / B${c.floorsBelow??0}</b></div><div><small>總戶數</small><b>${c.households??'—'}</b></div><div><small>在售（募/追/委）</small><b style="font-size:14px">${c.listings.length}（${stageCount(c,'recruit')}/${stageCount(c,'track')}/${stageCount(c,'entrust')}）</b></div></div>
   <h3>格局配置</h3>${c.layouts.length?`<table><thead><tr><th>門號 / 戶別</th><th>格局</th><th class="n">坪數</th></tr></thead><tbody>${c.layouts.map(l=>`<tr><td>${esc(l.unit||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping!=null?f2(l.ping):'—'}</td></tr>`).join('')}</tbody></table>`:'<div class="none">尚無格局資料</div>'}`;
   if(P.staff){h+=`<h3>管理人員與班表（${ymd(days[0]).slice(5).replace('-','/')} 起 14 天）</h3>`;
     h+=c.staff.length?`<table class="sch"><thead><tr><th style="width:62px">職稱</th><th style="width:78px">姓名</th><th style="width:62px">班別</th>${days.map(d=>`<th class="d">${d.getMonth()+1}/${d.getDate()}<br>${WDS[d.getDay()]}</th>`).join('')}</tr></thead><tbody>
     ${c.staff.map(s=>`<tr><td>${esc(s.title)}</td><td>${esc(personName(s))}<br><span style="color:#7d8a9c;font-size:10.5px">${s.gender==='女'?'女':'男'}${s.period?'・'+esc(s.period):''}</span></td><td style="font-size:11.5px">${esc(pattern(s.shiftId)?.name||'')}</td>${days.map(d=>{const w=isWork(s,ymd(d));return `<td class="d ${w==null?'':w?'w':'o'}">${w==null?'—':w?'班':'休'}</td>`}).join('')}</tr>`).join('')}</tbody></table>`:'<div class="none">尚無管理人員資料</div>'}
   if(P.listings){h+=`<h3>在售物件</h3>`;
-    h+=c.listings.length?`<table><thead><tr><th>階段</th><th>地址</th><th>樓層</th><th>格局</th><th class="n">坪數</th><th class="n">開價(萬)</th><th class="n">單價(萬/坪)</th><th>車位</th></tr></thead><tbody>
-    ${STAGES.flatMap(st=>c.listings.filter(l=>l.stage===st.k).map(l=>{const up=unitPrice(l);return `<tr><td><span class="stg" style="background:${st.c}">${st.n}</span></td><td>${esc(l.address||'—')}${l.note?`<br><span style="color:#7d8a9c;font-size:11px">${esc(l.note)}</span>`:''}</td><td>${esc(l.floor||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping?f2(l.ping):'—'}</td><td class="n"><b>${l.price?fInt(l.price):'—'}</b></td><td class="n">${up?f2(up):'—'}</td><td>${esc(parkStr(l))}</td></tr>`})).join('')}</tbody></table>`:'<div class="none">目前無在售物件</div>'}
+    h+=c.listings.length?`<table><thead><tr><th>階段</th><th>地址</th><th>樓層</th><th>格局</th><th class="n">坪數</th><th class="n">開價(萬)</th><th class="n">單價(萬/坪)</th><th class="n">與成交均價差</th><th>車位</th></tr></thead><tbody>
+    ${STAGES.flatMap(st=>c.listings.filter(l=>l.stage===st.k).map(l=>{const up=unitPrice(l);return `<tr><td><span class="stg" style="background:${st.c}">${st.n}</span></td><td>${esc(l.address||'—')}${l.note?`<br><span style="color:#7d8a9c;font-size:11px">${esc(l.note)}</span>`:''}</td><td>${esc(l.floor||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping?f2(l.ping):'—'}</td><td class="n"><b>${l.price?fInt(l.price):'—'}</b></td><td class="n">${up?f2(up):'—'}</td><td class="n">${rptDiff(up,+c.avgPrice)}</td><td>${esc(parkStr(l))}</td></tr>`})).join('')}</tbody></table>`:'<div class="none">目前無在售物件</div>'}
   if(c.note)h+=`<h3>備註</h3><div class="note pb">${esc(c.note)}</div>`;
   return h+`</section>`;
 }
