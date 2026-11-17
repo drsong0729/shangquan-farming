@@ -181,8 +181,40 @@ textarea{min-height:64px;resize:vertical}
 .plans{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
 .plan{border:1px solid rgba(255,255,255,.8);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(46,70,105,.06)}
 .plan img{width:100%;height:150px;object-fit:contain;background:rgba(240,243,247,.8);display:block;cursor:zoom-in}
-.plan .pf{padding:8px;display:flex;gap:6px}
-.plan input{font-size:13px;padding:6px 8px}
+.plan{position:relative}
+.plan .pdel{position:absolute;top:6px;right:6px;background:rgba(255,255,255,.85);box-shadow:0 2px 6px rgba(46,70,105,.15)}
+.plans{margin-bottom:6px}
+/* view mode */
+.chd .btn.sm{padding:7px 13px;font-size:13.5px}
+.vplans{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-bottom:14px}
+.vplans img{width:100%;height:220px;object-fit:contain;background:#fff;border-radius:16px;border:1px solid rgba(255,255,255,.9);box-shadow:0 4px 14px rgba(46,70,105,.1);cursor:zoom-in;display:block}
+.vplans.one{grid-template-columns:1fr}
+.vplans.one img{height:auto;max-height:380px}
+.vinfo{display:grid;gap:6px;background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.vinfo>div{display:flex;gap:10px;align-items:flex-start}
+.vinfo>div>span{color:var(--mut);font-size:12.5px;font-weight:700;min-width:30px;padding-top:1px}
+.rtag{font-style:normal;display:inline-block;background:var(--priL);color:var(--pri2);border-radius:10px;padding:1px 9px;font-size:12.5px;margin:0 5px 4px 0;font-weight:700}
+.kgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+@media(max-width:760px){.kgrid{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.85);border-radius:16px;padding:10px 12px;box-shadow:0 2px 8px rgba(46,70,105,.05);min-width:0}
+.kpi small{display:block;color:var(--mut);font-size:12px;font-weight:700}
+.kpi b{display:block;font-size:22px;font-weight:900;color:var(--pri2);line-height:1.25}
+.kpi i{font-style:normal;font-size:11.5px;color:var(--mut);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi.gold{background:linear-gradient(140deg,rgba(243,220,164,.45),rgba(255,255,255,.6))}
+.kpi.gold b{color:var(--accD)}
+.kpi.sage{background:linear-gradient(140deg,rgba(111,170,139,.22),rgba(255,255,255,.6))}
+.kpi.sage b{color:#4f8a6b}
+.vnote{background:rgba(255,255,255,.5);border-radius:14px;padding:10px 13px;margin-top:12px;font-size:13.5px;white-space:pre-wrap}
+.wwrap{overflow-x:auto;margin-bottom:6px}
+.wtab{width:100%;border-collapse:separate;border-spacing:4px;min-width:340px}
+.wtab th{font-size:11.5px;color:var(--mut);font-weight:700;text-align:center;line-height:1.3}
+.wtab th.td{color:#c27a45}
+.wtab td.nm{font-size:13px;white-space:nowrap;padding-right:4px;line-height:1.3}
+.wtab td.nm span{display:block;font-size:11px;color:var(--mut)}
+.wtab td.d{text-align:center;border-radius:10px;font-size:12.5px;font-weight:900;padding:8px 0;background:rgba(255,255,255,.55)}
+.wtab td.w{background:linear-gradient(160deg,#7397c4,#5a80b0);color:#fff}
+.wtab td.o{background:rgba(243,220,164,.5);color:#8a6a2a}
+.wtab td.today{box-shadow:0 0 0 2px #e0a06e}
 /* layouts */
 .lrow{display:grid;grid-template-columns:1.7fr .8fr .8fr .8fr 1fr 34px;gap:6px;margin-bottom:6px;align-items:center}
 .lrow.h{font-size:12px;color:var(--mut);font-weight:700}
@@ -271,7 +303,14 @@ details.shiftset summary{font-weight:700;cursor:pointer;color:var(--pri)}
 .r-head .r-s{font-size:13px;opacity:.9;margin-top:4px}
 .r-head .r-roads{margin-top:8px}
 .r-head .r-roads span{display:inline-block;background:rgba(255,255,255,.2);border-radius:12px;padding:1px 10px;font-size:12px;margin:0 6px 4px 0}
-.r-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 4px}
+.r-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:12px 0 4px}
+.rpt-sec .r-plans{display:grid;gap:8px;margin:12px 0 0}
+.rpt-sec .r-plans.multi{grid-template-columns:1fr 1fr}
+.rpt-sec .r-plans div{border:1px solid #e3e9f1;border-radius:12px;padding:8px;text-align:center;background:#fff}
+.rpt-sec .r-plans img{max-width:100%;max-height:560px;display:block;margin:0 auto}
+.rpt-sec .r-plans.multi img{max-height:300px}
+.r-kpis .sage{background:#eef6f1;border-color:#cfe5d8}
+.r-kpis .sage b{color:#4f8a6b}
 .r-kpis div{border:1px solid #e3e9f1;background:#f8fafc;border-radius:11px;padding:8px 10px}
 .r-kpis small{display:block;color:#7d8a9c;font-size:11px}
 .r-kpis b{font-size:16px;color:#36577f;font-weight:900}
@@ -381,6 +420,7 @@ function adYear(y){if(!y)return null;return y<1911?y+1911:y}
 function roomsList(c){const s=new Set();(c.layouts||[]).forEach(l=>{if(l.rooms!=null)s.add(+l.rooms)});if(!s.size)(c.listings||[]).forEach(l=>{if(l.rooms!=null)s.add(+l.rooms)});return [...s].sort((a,b)=>a-b)}
 function roomsStr(c){const r=roomsList(c);return r.length?r.map(x=>x+'房').join('·'):''}
 function unitPrice(l){return l.price>0&&l.ping>0?l.price/l.ping:null}
+function listAvg(c){return mean((c.listings||[]).map(unitPrice).filter(v=>v>0))}
 function layoutStr(o){if(o.rooms==null&&o.halls==null&&o.baths==null)return '—';return `${o.rooms??'-'}房${o.halls??'-'}廳${o.baths??'-'}衛`}
 function parkStr(l){if(!l.parkCount)return '無';return `${l.parkAccess||''}${l.parkType||''}×${l.parkCount}`}
 function floorsStr(c){const a=c.floorsAbove,b=c.floorsBelow;if(a==null&&b==null)return '—';return `地上${a??'-'}F / 地下${b??0}F`}
@@ -470,43 +510,97 @@ $('#qres').addEventListener('click',e=>{const d=e.target.closest('div[data-cid],
   if(d.dataset.cid){const c=S.communities.find(x=>x.id===d.dataset.cid);map.setView([c.lat,c.lng],18);openCommunity(c.id)}
   else{const ll=L.latLng(+d.dataset.lat,+d.dataset.lng);map.setView(ll,18);placeTemp(ll)}});
 
-/* ================= 社區編輯 Modal ================= */
-let E=null,EORIG='',isNew=false,MT='basic',WK=weekStart(new Date()),LF=null,editLid=null;
+/* ================= 社區檢視 / 編輯 Modal ================= */
+let E=null,EORIG='',isNew=false,MODE='view',MT='basic',WK=weekStart(new Date()),LF=null,editLid=null;
 const emptyLF=()=>({address:'',floor:'',ping:null,rooms:null,halls:null,baths:null,price:null,parkAccess:'坡道',parkType:'平面',parkCount:0,note:''});
 function newCommunity(ll){return {id:uid(),lat:ll.lat,lng:ll.lng,name:'',builder:'',address:'',roads:[],floorsAbove:null,floorsBelow:null,builtYear:null,households:null,avgPrice:null,note:'',plans:[],layouts:[],staff:[],listings:[],createdAt:Date.now(),updatedAt:Date.now()}}
 function applyGeoToDraft(g){if(!E||!g)return;delete E._pendingGeo;
   if(!E.address&&g.display){E.address=g.display;const i=document.querySelector('[data-k="address"]');if(i&&!i.value)i.value=g.display}
-  if(g.road&&!E.roads.length){E.roads.push(g.road);if(MT==='basic'){const ch=$('#roadChips');if(ch)ch.innerHTML=roadChipsHtml()}}
+  if(g.road&&!E.roads.length){E.roads.push(g.road);if(MODE==='edit'&&MT==='basic'){const ch=$('#roadChips');if(ch)ch.innerHTML=roadChipsHtml()}}
 }
 window.openNew=function(){
   if(!tempMarker)return;const ll=tempMarker.getLatLng();
-  E=newCommunity(ll);isNew=true;
+  E=newCommunity(ll);isNew=true;MODE='edit';
   if(tempGeo)applyGeoToDraft(tempGeo);else E._pendingGeo=geoSeq;
-  EORIG=JSON.stringify(strip(E));MT='basic';LF=emptyLF();editLid=null;WK=weekStart(new Date());
+  EORIG=JSON.stringify(strip(E));MT='basic';WK=weekStart(new Date());
   map.closePopup();renderModal();$('#ov').classList.add('on');
 };
 window.cancelTemp=cancelTemp;
-function openCommunity(id,tab='basic'){
+function openCommunity(id,focus){
   const c=S.communities.find(x=>x.id===id);if(!c)return;
-  E=clone(c);isNew=false;EORIG=JSON.stringify(strip(E));MT=tab;LF=emptyLF();editLid=null;WK=weekStart(new Date());
-  renderModal();$('#ov').classList.add('on');
+  E=clone(c);isNew=false;MODE='view';EORIG=JSON.stringify(strip(E));WK=weekStart(new Date());
+  renderModal();$('#ov').classList.add('on');$('#cbody').scrollTop=0;
+  if(focus==='listings'){const el=$('#vListings');if(el)$('#cbody').scrollTop=el.offsetTop-8}
 }
 function strip(o){const r={};for(const k in o)if(!k.startsWith('_'))r[k]=o[k];return r}
+const dirty=()=>!!E&&JSON.stringify(strip(E))!==EORIG;
 function closeModal(force){
-  if(!force&&E&&JSON.stringify(strip(E))!==EORIG&&!confirm('有尚未儲存的變更，確定要關閉嗎？'))return;
+  if(!force&&MODE==='edit'&&dirty()&&!confirm('有尚未儲存的變更，確定要關閉嗎？'))return;
   $('#ov').classList.remove('on');E=null;
 }
-function renderModal(){
-  const L_=E.listings.length;
-  $('#mcard').innerHTML=`
-  <div class="chd"><h3>${isNew?'新增社區':'🏢 '+esc(E.name||'未命名社區')}</h3><button class="close" data-act="close">✕</button></div>
-  <div class="mtabs" id="mtabs">${[['basic','社區基本資料'],['plans','社區平面圖',E.plans.length],['layouts','格局',E.layouts.length],['staff','管理人員',E.staff.length],['listings','在售物件',L_]].map(([k,n,c])=>`<button data-tab="${k}" class="${MT===k?'on':''}">${n}${c?`<span class="cnt">${c}</span>`:''}</button>`).join('')}</div>
-  <div class="cbody" id="cbody">${renderTab()}</div>
-  <div class="cft">${isNew?'':'<button class="btn danger" data-act="delC">刪除社區</button>'}<div class="sp" style="flex:1"></div><button class="btn" data-act="close">取消</button><button class="btn pri" data-act="save">${isNew?'新增社區':'儲存'}</button></div>`;
+function startEdit(){MODE='edit';MT='basic';EORIG=JSON.stringify(strip(E));WK=weekStart(new Date());renderModal();$('#cbody').scrollTop=0}
+function cancelEdit(){
+  if(isNew){closeModal();return}
+  if(dirty()&&!confirm('放棄尚未儲存的變更？'))return;
+  const c=S.communities.find(x=>x.id===E.id);if(!c){closeModal(true);return}
+  E=clone(c);MODE='view';EORIG=JSON.stringify(strip(E));renderModal();
 }
-function rerenderBody(){const b=$('#cbody');const st=b.scrollTop;b.innerHTML=renderTab();b.scrollTop=st;
-  $('#mtabs').innerHTML=[['basic','社區基本資料'],['plans','社區平面圖',E.plans.length],['layouts','格局',E.layouts.length],['staff','管理人員',E.staff.length],['listings','在售物件',E.listings.length]].map(([k,n,c])=>`<button data-tab="${k}" class="${MT===k?'on':''}">${n}${c?`<span class="cnt">${c}</span>`:''}</button>`).join('')}
-function renderTab(){return {basic:tabBasic,plans:tabPlans,layouts:tabLayouts,staff:tabStaff,listings:tabListings}[MT]()}
+function syncOpenView(){
+  if(!E||MODE!=='view'||isNew||!$('#ov').classList.contains('on'))return;
+  const c=S.communities.find(x=>x.id===E.id);if(!c){$('#ov2').classList.remove('on');closeModal(true);return}
+  const j=JSON.stringify(strip(c));if(j===EORIG)return;
+  E=clone(c);EORIG=j;const st=$('#cbody')?$('#cbody').scrollTop:0;renderModal();$('#cbody').scrollTop=st;
+}
+const tabsHtml=()=>[['basic','基本資料・平面圖',E.plans.length],['layouts','格局',E.layouts.length],['staff','管理人員',E.staff.length],['listings','在售物件',E.listings.length]].map(([k,n,c])=>`<button data-tab="${k}" class="${MT===k?'on':''}">${n}${c?`<span class="cnt">${c}</span>`:''}</button>`).join('');
+function renderModal(){
+  const card=$('#mcard');
+  if(MODE==='view'){
+    card.innerHTML=`<div class="chd"><h3>🏢 ${esc(E.name||'未命名社區')}</h3><button class="btn pri sm" data-act="edit">✏️ 編輯</button><button class="close" data-act="close">✕</button></div>
+    <div class="cbody" id="cbody">${viewHtml()}</div>`;return}
+  card.innerHTML=`<div class="chd"><h3>${isNew?'新增社區':'✏️ 編輯：'+esc(E.name||'未命名社區')}</h3><button class="close" data-act="close">✕</button></div>
+  <div class="mtabs" id="mtabs">${tabsHtml()}</div>
+  <div class="cbody" id="cbody">${renderTab()}</div>
+  <div class="cft">${isNew?'':'<button class="btn danger" data-act="delC">刪除社區</button>'}<div style="flex:1"></div><button class="btn" data-act="cancelEdit">取消</button><button class="btn pri" data-act="save">${isNew?'新增社區':'儲存'}</button></div>`;
+}
+function rerenderBody(){const b=$('#cbody');if(!b)return;const st=b.scrollTop;b.innerHTML=MODE==='view'?viewHtml():renderTab();b.scrollTop=st;const t=$('#mtabs');if(t)t.innerHTML=tabsHtml()}
+function renderTab(){return {basic:tabBasic,layouts:tabLayouts,staff:tabStaff,listings:tabListings}[MT]()}
+function weekNavHtml(days){return `<div class="weeknav"><button class="btn sm" data-act="wk" data-d="-7">‹ 上週</button><b>${ymd(days[0]).replace(/-/g,'/')} – ${ymd(days[6]).slice(5).replace('-','/')}</b><button class="btn sm" data-act="wk" data-d="7">下週 ›</button><button class="btn sm ghost" data-act="wk" data-d="0">本週</button></div>`}
+function lanesHtml(){return `<div class="lanes">${STAGES.map(st=>{const ls=E.listings.filter(l=>l.stage===st.k);return `<div class="lane"><h5><span class="dot" style="background:${st.c}"></span>${st.n}<span class="n">${ls.length}</span></h5>${ls.map(l=>listingCard(l,E,false)).join('')||'<div class="small mut" style="padding:6px">—</div>'}</div>`}).join('')}</div>`}
+/* ----- 呈現畫面 ----- */
+function viewHtml(){
+  const c=E,age=cAge(c),la=listAvg(c),ps=c.plans.filter(p=>p.src),loading=c.plans.length-ps.length;
+  const days=[...Array(7)].map((_,k)=>addDays(WK,k));const t=todayStr();
+  const on=c.staff.filter(s=>isWork(s,t)===true).map(s=>`${s.title} ${personName(s)}${s.period?`（${s.period}）`:''}`);
+  const pats=[...new Set(c.staff.map(s=>pattern(s.shiftId)?.name).filter(Boolean))];
+  return `
+  ${ps.length?`<div class="vplans ${ps.length===1?'one':''}">${ps.map(p=>`<img src="${p.src}" data-act="zoomv" data-id="${p.id}" alt="社區平面圖">`).join('')}</div>`:loading?'<div class="empty">平面圖雲端載入中…</div>':''}
+  <div class="vinfo">
+    <div><span>建商</span>${esc(c.builder||'—')}</div>
+    <div><span>地址</span>${esc(c.address||'—')}</div>
+    ${c.roads.length?`<div><span>道路</span><div>${c.roads.map(r=>`<i class="rtag">${esc(r)}</i>`).join('')}</div></div>`:''}
+  </div>
+  <div class="kgrid">
+    <div class="kpi gold"><small>成交均價</small><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b><i>萬/坪</i></div>
+    <div class="kpi sage"><small>在售均價</small><b>${la!=null?f2(la):'—'}</b><i>萬/坪 ${la!=null?diffTag(la,+c.avgPrice):''}</i></div>
+    <div class="kpi"><small>屋齡</small><b>${age!=null?age:'—'}</b><i>${age!=null?`年・${adYear(c.builtYear)} 完工`:'年'}</i></div>
+    <div class="kpi"><small>樓層</small><b>${c.floorsAbove??'—'}F</b><i>地下 ${c.floorsBelow??0} 層</i></div>
+    <div class="kpi"><small>總戶數</small><b>${c.households??'—'}</b><i>戶</i></div>
+    <div class="kpi"><small>在售物件</small><b>${c.listings.length}</b><i>募${stageCount(c,'recruit')}・追${stageCount(c,'track')}・委${stageCount(c,'entrust')}</i></div>
+  </div>
+  ${c.note?`<div class="vnote">📝 ${esc(c.note)}</div>`:''}
+  <div class="sub">格局</div>
+  ${c.layouts.length?`<table class="rtable"><thead><tr><th>門號 / 戶別</th><th>格局</th><th class="n">坪數</th></tr></thead><tbody>${c.layouts.map(l=>`<tr><td>${esc(l.unit||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping!=null?f2(l.ping):'—'}</td></tr>`).join('')}</tbody></table>`:'<div class="empty">尚無格局資料</div>'}
+  <div class="sub">管理人員</div>
+  ${c.staff.length?`<div class="duty">今日上班：${on.length?'<b>'+esc(on.join('、'))+'</b>':'<span class="mut">無／尚未設定班表起始日</span>'}</div>
+  ${weekNavHtml(days)}
+  <div class="wwrap"><table class="wtab"><thead><tr><th></th>${days.map((d,k)=>`<th class="${ymd(d)===t?'td':''}">週${WD[k]}<br>${d.getMonth()+1}/${d.getDate()}</th>`).join('')}</tr></thead><tbody>
+  ${c.staff.map(s=>`<tr><td class="nm"><b>${esc(personName(s))}</b><span>${esc(s.title)}${s.period?'・'+esc(s.period):''}</span></td>${days.map(d=>{const ds=ymd(d),w=isWork(s,ds);return `<td class="d ${w==null?'':w?'w':'o'} ${ds===t?'today':''}">${w==null?'—':w?'班':'休'}</td>`}).join('')}</tr>`).join('')}
+  </tbody></table></div>
+  ${pats.length?`<div class="small mut">班別：${esc(pats.join('、'))}</div>`:''}`:'<div class="empty">尚無管理人員</div>'}
+  <div class="sub" id="vListings">在售物件<span style="flex:1"></span><button class="btn gold sm" data-act="lNew">＋ 新增物件</button></div>
+  ${lanesHtml()}`;
+}
+/* ----- 編輯畫面 ----- */
 function roadChipsHtml(){return E.roads.length?E.roads.map((r,i)=>`<span class="chip on">${esc(r)}<button class="x" data-act="delRoad" data-i="${i}">×</button></span>`).join(''):'<span class="mut small">尚未設定道路</span>'}
 function ageText(){const a=cAge(E);return a==null?'':`${a} 年（${adYear(E.builtYear)} 年完工）`}
 function tabBasic(){return `
@@ -520,6 +614,9 @@ function tabBasic(){return `
     <div class="row" style="flex-wrap:nowrap"><input id="roadIn" list="roadList" placeholder="輸入路名，例：博愛二路"><button class="btn" data-act="addRoad">加入</button></div>
     <datalist id="roadList">${allRoads().map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
   </div>
+  <div class="sub">社區平面圖</div>
+  <label class="upload">＋ 上傳社區平面圖（可一次選多張）<input type="file" accept="image/*" multiple id="planIn" hidden></label>
+  ${E.plans.length?`<div class="plans">${E.plans.map((p,i)=>`<div class="plan">${p.src?`<img src="${p.src}" data-act="zoom" data-i="${i}" alt="">`:`<div style="height:150px;display:grid;place-items:center" class="small mut">雲端圖片載入中…</div>`}<button class="ibtn pdel" data-act="delPlan" data-i="${i}" title="刪除">×</button></div>`).join('')}</div>`:''}
   <div class="sub">社區基本資料</div>
   <div class="g4">
     <label class="fld"><span>地上樓層</span><input type="number" inputmode="numeric" data-k="floorsAbove" data-num="1" value="${E.floorsAbove??''}" placeholder="層"></label>
@@ -533,11 +630,6 @@ function tabBasic(){return `
   </div>
   <label class="fld"><span>備註</span><textarea data-k="note" placeholder="公設、管理費、社區特色、開發重點…">${esc(E.note)}</textarea></label>
   <div class="row small mut">座標 ${E.lat.toFixed(5)}, ${E.lng.toFixed(5)} ${isNew?'':'<button class="btn sm" data-act="relocate">📍 重新定位圖標</button>'}</div>`}
-function tabPlans(){return `
-  <label class="upload">＋ 上傳社區平面圖（可一次選多張）<input type="file" accept="image/*" multiple id="planIn" hidden></label>
-  <div class="plans">${E.plans.map((p,i)=>`<div class="plan">${p.src?`<img src="${p.src}" data-act="zoom" data-i="${i}" alt="">`:`<div style="height:150px;display:grid;place-items:center" class="small mut">雲端圖片載入中…</div>`}<div class="pf"><input data-arr="plans" data-i="${i}" data-f="caption" value="${esc(p.caption)}" placeholder="說明，例：A棟 標準層"><button class="ibtn" data-act="delPlan" data-i="${i}">×</button></div></div>`).join('')}</div>
-  ${E.plans.length?'':'<div class="empty">尚未上傳平面圖</div>'}
-  <p class="small mut">圖片會自動壓縮後儲存在本機瀏覽器，並可輸出到 PDF。</p>`}
 function tabLayouts(){return `
   <div class="hint">每一筆代表一個門號 / 戶別對應的格局，例如「A1 → 3房2廳2衛、42.5 坪」。</div>
   ${E.layouts.length?`<div class="lrow h"><div>門號 / 戶別</div><div>房</div><div>廳</div><div>衛</div><div>坪數</div><div></div></div>`:''}
@@ -552,10 +644,8 @@ function tabLayouts(){return `
   <div class="row" style="margin-top:8px"><button class="btn pri" data-act="addLayout">＋ 新增格局</button>${E.layouts.length?'<button class="btn" data-act="dupLayout">複製上一筆</button>':''}</div>`}
 function tabStaff(){
   const days=[...Array(7)].map((_,k)=>addDays(WK,k));const t=todayStr();
-  const on=E.staff.filter(s=>isWork(s,t)===true).map(s=>`${s.title} ${personName(s)}${s.period?`（${s.period}）`:''}`);
   return `
-  <div class="duty">今日（${t.slice(5).replace('-','/')} 週${WDS[new Date().getDay()]}）上班：${on.length?'<b>'+esc(on.join('、'))+'</b>':'<span class="mut">無／尚未設定班表</span>'}</div>
-  <div class="weeknav"><button class="btn sm" data-act="wk" data-d="-7">‹ 上週</button><b>${ymd(days[0]).replace(/-/g,'/')} – ${ymd(days[6]).slice(5).replace('-','/')}</b><button class="btn sm" data-act="wk" data-d="7">下週 ›</button><button class="btn sm ghost" data-act="wk" data-d="0">本週</button></div>
+  ${weekNavHtml(days)}
   <div class="hint">點選人員下方任一天，即設為該班別頻率的「上班第 1 天」，其餘日期依頻率自動推算（藍＝上班、黃＝休假）。</div>
   ${E.staff.map((s,i)=>`<div class="staff">
     <div class="srow">
@@ -576,36 +666,9 @@ function tabStaff(){
     <div style="margin-top:10px">${S.shiftPatterns.map(p=>`<span class="chip">${esc(p.name)}（${p.work+p.off} 天一循環）${S.shiftPatterns.length>1?`<button class="x" data-act="delPat" data-id="${p.id}">×</button>`:''}</span>`).join('')}</div>
     <div class="row" style="margin-top:6px;flex-wrap:nowrap">上班<input type="number" id="patW" min="1" value="5" style="width:70px">天　休<input type="number" id="patO" min="1" value="2" style="width:70px">天<button class="btn" data-act="addPat">新增班別</button></div>
   </details>`}
-function lfVal(k){return LF[k]??''}
-function tabListings(){
-  const up=unitPrice(LF);
-  return `
-  <div class="lform">
-    <h4>${editLid?'✏️ 編輯物件':'＋ 新增物件（直接進入募集線）'}</h4>
-    <div class="g2">
-      <label class="fld"><span>地址</span><input data-lf="address" value="${esc(lfVal('address'))}" placeholder="例：${esc(E.address||'○○路○號')}"></label>
-      <label class="fld"><span>樓層</span><input data-lf="floor" value="${esc(lfVal('floor'))}" placeholder="例：8F / 15F"></label>
-    </div>
-    <div class="g4">
-      <label class="fld"><span>坪數</span><input type="number" inputmode="decimal" step="0.01" data-lf="ping" data-num="1" value="${lfVal('ping')}"></label>
-      <label class="fld"><span>房</span><input type="number" inputmode="numeric" data-lf="rooms" data-num="1" value="${lfVal('rooms')}"></label>
-      <label class="fld"><span>廳</span><input type="number" inputmode="numeric" data-lf="halls" data-num="1" value="${lfVal('halls')}"></label>
-      <label class="fld"><span>衛</span><input type="number" inputmode="numeric" data-lf="baths" data-num="1" value="${lfVal('baths')}"></label>
-    </div>
-    <div class="g3">
-      <label class="fld"><span>開價（萬）</span><input type="number" inputmode="decimal" step="0.1" data-lf="price" data-num="1" value="${lfVal('price')}"></label>
-      <label class="fld"><span>單價（萬/坪，開價÷坪數）</span><input readonly id="upOut" value="${up?f2(up):''}" placeholder="自動計算"></label>
-      <label class="fld"><span>社區成交均價</span><input readonly id="avgOut" value="${E.avgPrice>0?f1(+E.avgPrice)+' 萬/坪':'未填（於基本資料）'}"></label>
-    </div>
-    <div class="g3">
-      <label class="fld"><span>車位進出</span><select data-lf="parkAccess">${['坡道','昇降'].map(x=>`<option ${LF.parkAccess===x?'selected':''}>${x}</option>`).join('')}</select></label>
-      <label class="fld"><span>車位型式</span><select data-lf="parkType">${['平面','機械'].map(x=>`<option ${LF.parkType===x?'selected':''}>${x}</option>`).join('')}</select></label>
-      <label class="fld"><span>車位數量</span><input type="number" inputmode="numeric" min="0" data-lf="parkCount" data-num="1" value="${lfVal('parkCount')}"></label>
-    </div>
-    <label class="fld"><span>備註</span><input data-lf="note" value="${esc(lfVal('note'))}" placeholder="屋主狀況、看屋方式…"></label>
-    <div class="row end">${editLid?'<button class="btn" data-act="lfCancel">取消編輯</button><button class="btn pri" data-act="lfSave">更新物件</button>':'<button class="btn gold" data-act="lfAdd">＋ 新增至募集線</button>'}</div>
-  </div>
-  <div class="lanes">${STAGES.map(st=>{const ls=E.listings.filter(l=>l.stage===st.k);return `<div class="lane"><h5><span class="dot" style="background:${st.c}"></span>${st.n}<span class="n">${ls.length}</span></h5>${ls.map(l=>listingCard(l,E,false)).join('')||'<div class="small mut" style="padding:6px">—</div>'}</div>`}).join('')}</div>`}
+function tabListings(){return `
+  <div class="row" style="margin-bottom:12px"><span class="small mut" style="flex:1">新增的物件會先進入募集線，可再轉入追蹤線、委託。</span><button class="btn gold" data-act="lNew">＋ 新增物件</button></div>
+  ${lanesHtml()}`}
 function listingCard(l,c,showC){
   const up=unitPrice(l);const st=stg(l.stage);const a=`data-cid="${c.id}" data-lid="${l.id}"`;
   const mv=l.stage==='recruit'?`<button class="btn sm pri" data-act="mv" data-to="track" ${a}>轉入追蹤線 →</button>`
@@ -621,17 +684,67 @@ function listingCard(l,c,showC){
     <div class="lbtns">${mv}<button class="btn sm ghost" data-act="lEdit" ${a}>編輯</button><button class="btn sm ghost del" data-act="lDel" ${a}>刪除</button></div>
   </div>`}
 
+/* ----- 物件新增 / 編輯 彈出視窗 ----- */
+function lfVal(k){return LF[k]??''}
+function openListingForm(lid){
+  if(!E)return;const l=lid?E.listings.find(x=>x.id===lid):null;
+  editLid=l?l.id:null;LF=l?{...emptyLF(),...clone(l)}:emptyLF();['id','stage','stageDate','createdAt'].forEach(k=>delete LF[k]);
+  renderListingForm();$('#ov2').classList.add('on');
+  if(!l)setTimeout(()=>{const i=document.querySelector('#mcard2 [data-lf="address"]');i&&i.focus()},80);
+}
+function renderListingForm(){
+  const up=unitPrice(LF);
+  $('#mcard2').innerHTML=`<div class="chd"><h3>${editLid?'✏️ 編輯物件':'＋ 新增物件'}<span class="small mut" style="font-weight:500;margin-left:8px">${esc(E.name||'')}</span></h3><button class="close" data-lp="x">✕</button></div>
+  <div class="cbody lpform">
+    <div class="g2">
+      <label class="fld"><span>地址</span><input data-lf="address" value="${esc(lfVal('address'))}" placeholder="例：${esc(E.address||'○○路○號')}"></label>
+      <label class="fld"><span>樓層</span><input data-lf="floor" value="${esc(lfVal('floor'))}" placeholder="例：8F / 15F"></label>
+    </div>
+    <div class="g4">
+      <label class="fld"><span>坪數</span><input type="number" inputmode="decimal" step="0.01" data-lf="ping" data-num="1" value="${lfVal('ping')}"></label>
+      <label class="fld"><span>房</span><input type="number" inputmode="numeric" data-lf="rooms" data-num="1" value="${lfVal('rooms')}"></label>
+      <label class="fld"><span>廳</span><input type="number" inputmode="numeric" data-lf="halls" data-num="1" value="${lfVal('halls')}"></label>
+      <label class="fld"><span>衛</span><input type="number" inputmode="numeric" data-lf="baths" data-num="1" value="${lfVal('baths')}"></label>
+    </div>
+    <div class="g3">
+      <label class="fld"><span>開價（萬）</span><input type="number" inputmode="decimal" step="0.1" data-lf="price" data-num="1" value="${lfVal('price')}"></label>
+      <label class="fld"><span>單價（萬/坪）</span><input readonly id="upOut" value="${up?f2(up):''}" placeholder="開價÷坪數"></label>
+      <label class="fld"><span>社區成交均價</span><input readonly value="${E.avgPrice>0?f1(+E.avgPrice)+' 萬/坪':'未填'}"></label>
+    </div>
+    <div class="g3">
+      <label class="fld"><span>車位進出</span><select data-lf="parkAccess">${['坡道','昇降'].map(x=>`<option ${LF.parkAccess===x?'selected':''}>${x}</option>`).join('')}</select></label>
+      <label class="fld"><span>車位型式</span><select data-lf="parkType">${['平面','機械'].map(x=>`<option ${LF.parkType===x?'selected':''}>${x}</option>`).join('')}</select></label>
+      <label class="fld"><span>車位數量</span><input type="number" inputmode="numeric" min="0" data-lf="parkCount" data-num="1" value="${lfVal('parkCount')}"></label>
+    </div>
+    <label class="fld"><span>備註</span><input data-lf="note" value="${esc(lfVal('note'))}" placeholder="屋主狀況、看屋方式…"></label>
+  </div>
+  <div class="cft">${editLid?'':'<span class="small mut">新增後會進入「募集線」</span>'}<div style="flex:1"></div><button class="btn" data-lp="x">取消</button><button class="btn ${editLid?'pri':'gold'}" data-lp="ok">${editLid?'更新物件':'＋ 新增至募集線'}</button></div>`;
+}
+function lfInput(e){const t=e.target;if(!t.dataset||!t.dataset.lf||!$('#mcard2 .lpform'))return;LF[t.dataset.lf]=t.dataset.num?num(t.value):t.value;
+  if(t.dataset.lf==='price'||t.dataset.lf==='ping'){const up=unitPrice(LF);$('#upOut').value=up?f2(up):''}}
+$('#mcard2').addEventListener('input',lfInput);$('#mcard2').addEventListener('change',lfInput);
+$('#mcard2').addEventListener('click',e=>{const b=e.target.closest('[data-lp]');if(!b)return;
+  if(b.dataset.lp==='x'||!E){$('#ov2').classList.remove('on');editLid=null;return}
+  if(!LF.address&&!LF.floor&&!LF.price){toast('請至少填寫地址、樓層或開價');return}
+  const upd=!!editLid;
+  if(upd){const l=E.listings.find(x=>x.id===editLid);if(l)Object.assign(l,LF)}
+  else E.listings.push({...LF,id:uid(),stage:'recruit',stageDate:todayStr(),createdAt:Date.now()});
+  editLid=null;$('#ov2').classList.remove('on');
+  afterListingChange(upd?'物件已更新':'已新增至募集線');
+});
+function commitView(){const i=S.communities.findIndex(c=>c.id===E.id);if(i<0)return;E.updatedAt=Date.now();const data=strip(clone(E));S.communities[i]=data;EORIG=JSON.stringify(data);persist();renderAll();rerenderBody()}
+function afterListingChange(msg){if(MODE==='view'&&!isNew){commitView();toast(msg)}else{rerenderBody();toast(msg+'（記得按儲存）')}}
+
 /* ----- modal 事件 ----- */
 const ov=$('#ov');
-ov.addEventListener('mousedown',e=>{if(e.target===ov)ov._down=true;else ov._down=false});
+ov.addEventListener('mousedown',e=>{ov._down=e.target===ov});
 ov.addEventListener('click',e=>{if(e.target===ov&&ov._down)closeModal()});
 function onField(e){
-  const t=e.target;if(!E)return;
+  const t=e.target;if(!E||MODE!=='edit')return;
   if(t.id==='planIn'){if(e.type==='change')addPlans(t.files);return}
   const d=t.dataset;
-  if(d.k){E[d.k]=d.num?num(t.value):t.value;if(d.k==='builtYear'){const o=$('#ageOut');if(o)o.value=ageText()}if(d.k==='name'&&!isNew)$('.chd h3').textContent='🏢 '+(t.value||'未命名社區');return}
+  if(d.k){E[d.k]=d.num?num(t.value):t.value;if(d.k==='builtYear'){const o=$('#ageOut');if(o)o.value=ageText()}return}
   if(d.arr){const o=E[d.arr][+d.i];if(!o)return;o[d.f]=d.num?num(t.value):t.value;if(d.rr&&e.type==='change')rerenderBody();return}
-  if(d.lf){LF[d.lf]=d.num?num(t.value):t.value;if(d.lf==='price'||d.lf==='ping'){const up=unitPrice(LF);$('#upOut').value=up?f2(up):''}}
 }
 $('#mcard').addEventListener('input',onField);
 $('#mcard').addEventListener('change',onField);
@@ -639,15 +752,18 @@ $('#mcard').addEventListener('keydown',e=>{if(e.target.id==='roadIn'&&e.key==='E
 function addRoad(){const i=$('#roadIn');const v=i.value.trim().replace(/\s+/g,'');if(!v)return;if(!E.roads.includes(v))E.roads.push(v);i.value='';$('#roadChips').innerHTML=roadChipsHtml()}
 $('#mcard').addEventListener('click',e=>{
   const tb=e.target.closest('[data-tab]');if(tb){MT=tb.dataset.tab;rerenderBody();$('#cbody').scrollTop=0;return}
-  const b=e.target.closest('[data-act]');if(!b)return;const d=b.dataset;const i=+d.i;
+  const b=e.target.closest('[data-act]');if(!b||!E)return;const d=b.dataset;const i=+d.i;
   switch(d.act){
     case 'close':closeModal();break;
+    case 'edit':startEdit();break;
+    case 'cancelEdit':cancelEdit();break;
     case 'save':saveCommunity();break;
     case 'delC':if(confirm(`確定刪除「${E.name||'未命名社區'}」及其所有資料？此動作無法復原。`)){S.communities=S.communities.filter(c=>c.id!==E.id);persist();closeModal(true);renderAll();toast('已刪除社區')}break;
     case 'addRoad':addRoad();break;
     case 'delRoad':E.roads.splice(i,1);$('#roadChips').innerHTML=roadChipsHtml();break;
     case 'relocate':startRelocate();break;
-    case 'zoom':$('#lb img').src=E.plans[i].src;$('#lb').classList.add('on');break;
+    case 'zoom':if(E.plans[i]&&E.plans[i].src){$('#lb img').src=E.plans[i].src;$('#lb').classList.add('on')}break;
+    case 'zoomv':{const p=E.plans.find(x=>x.id===d.id);if(p&&p.src){$('#lb img').src=p.src;$('#lb').classList.add('on')}break}
     case 'delPlan':if(confirm('刪除這張平面圖？')){E.plans.splice(i,1);rerenderBody()}break;
     case 'addLayout':E.layouts.push({id:uid(),unit:'',rooms:null,halls:null,baths:null,ping:null});rerenderBody();focusLast('.lrow input[data-f="unit"]');break;
     case 'dupLayout':{const p=E.layouts[E.layouts.length-1];E.layouts.push({...p,id:uid(),unit:''});rerenderBody();focusLast('.lrow input[data-f="unit"]');break}
@@ -661,31 +777,26 @@ $('#mcard').addEventListener('click',e=>{
       S.shiftPatterns.push({id:uid(),name:nm,work:w,off:o});persist();rerenderBody();toast('已新增班別：'+nm);break}
     case 'delPat':{const used=S.communities.some(c=>c.staff.some(s=>s.shiftId===d.id))||E.staff.some(s=>s.shiftId===d.id);if(used){toast('此班別仍有人員使用，無法刪除');break}
       S.shiftPatterns=S.shiftPatterns.filter(p=>p.id!==d.id);persist();rerenderBody();break}
-    case 'lfAdd':{if(!LF.address&&!LF.floor&&!LF.price){toast('請至少填寫地址、樓層或開價');break}
-      E.listings.push({...LF,id:uid(),stage:'recruit',stageDate:todayStr(),createdAt:Date.now()});LF=emptyLF();rerenderBody();toast('已新增至募集線（記得按儲存）');break}
-    case 'lfSave':{const l=E.listings.find(x=>x.id===editLid);Object.assign(l,LF);editLid=null;LF=emptyLF();rerenderBody();toast('物件已更新');break}
-    case 'lfCancel':editLid=null;LF=emptyLF();rerenderBody();break;
-    case 'lEdit':startEditListing(E.listings.find(x=>x.id===d.lid));break;
-    case 'lDel':if(confirm('刪除此物件？')){E.listings=E.listings.filter(x=>x.id!==d.lid);if(editLid===d.lid){editLid=null;LF=emptyLF()}rerenderBody()}break;
-    case 'mv':{const l=E.listings.find(x=>x.id===d.lid);l.stage=d.to;l.stageDate=todayStr();rerenderBody();toast('已移至'+stg(d.to).n);break}
+    case 'lNew':openListingForm(null);break;
+    case 'lEdit':openListingForm(d.lid);break;
+    case 'lDel':if(confirm('刪除此物件？')){E.listings=E.listings.filter(x=>x.id!==d.lid);afterListingChange('已刪除物件')}break;
+    case 'mv':{const l=E.listings.find(x=>x.id===d.lid);if(!l)break;l.stage=d.to;l.stageDate=todayStr();afterListingChange('已移至'+stg(d.to).n);break}
   }
 });
-function startEditListing(l){editLid=l.id;LF={...emptyLF(),...clone(l)};['id','stage','stageDate','createdAt'].forEach(k=>delete LF[k]);rerenderBody();$('#cbody').scrollTop=0}
 function focusLast(sel){const a=document.querySelectorAll('#cbody '+sel);if(a.length)a[a.length-1].focus()}
 function cn(n){const m=['零','一','二','三','四','五','六','七','八','九','十'];return n<=10?m[n]:String(n)}
 async function addPlans(files){
   if(!files||!files.length)return;toast('處理圖片中…');
-  for(const f of files){try{const src=await compressImg(f);E.plans.push({id:uid(),src,caption:f.name.replace(/\.[^.]+$/,'')})}catch(e){toast('無法讀取：'+f.name)}}
+  for(const f of files){try{const src=await compressImg(f);E.plans.push({id:uid(),src,caption:''})}catch(e){toast('無法讀取：'+f.name)}}
   rerenderBody();toast(`已加入 ${files.length} 張平面圖`);
 }
 function compressImg(file,max=1800){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const img=new Image();img.onerror=rej;img.onload=()=>{const s=Math.min(1,max/Math.max(img.width,img.height));const c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.86))};img.src=fr.result};fr.readAsDataURL(file)})}
 function saveCommunity(){
   if(!E.name.trim()){MT='basic';rerenderBody();toast('請填寫社區名稱');setTimeout(()=>{const i=document.querySelector('[data-k="name"]');i&&i.focus()},50);return}
-  if(editLid&&!confirm('物件編輯尚未按「更新物件」，仍要儲存社區嗎？（未更新的修改將不會保存）'))return;
-  if(!editLid&&(LF.address||LF.price||LF.floor)&&!confirm('新增物件表單已有內容但尚未按「新增至募集線」，仍要儲存社區嗎？（該物件不會加入）'))return;
-  E.name=E.name.trim();E.updatedAt=Date.now();const data=strip(E);
+  E.name=E.name.trim();E.updatedAt=Date.now();const data=strip(clone(E));
   const idx=S.communities.findIndex(c=>c.id===E.id);if(idx>=0)S.communities[idx]=data;else S.communities.push(data);
-  persist();if(isNew)cancelTemp();closeModal(true);renderAll();toast(isNew?'已新增社區 ✔':'已儲存 ✔');
+  const wasNew=isNew;if(isNew)cancelTemp();isNew=false;MODE='view';E=clone(data);EORIG=JSON.stringify(data);
+  persist();renderAll();renderModal();$('#cbody').scrollTop=0;toast(wasNew?'已新增社區 ✔':'已儲存 ✔');
 }
 /* ----- 重新定位 ----- */
 let relMarker=null;
@@ -694,7 +805,10 @@ function startRelocate(){relocating=E;$('#ov').classList.remove('on');cancelTemp
 function endRelocate(ok){if(ok){const ll=relMarker.getLatLng();relocating.lat=ll.lat;relocating.lng=ll.lng}map.removeLayer(relMarker);relMarker=null;$('#banner').classList.remove('on');E=relocating;relocating=null;rerenderBody();$('#ov').classList.add('on')}
 $('#relOk').onclick=()=>endRelocate(true);$('#relCancel').onclick=()=>endRelocate(false);
 $('#lb').onclick=()=>$('#lb').classList.remove('on');
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#lb').classList.contains('on'))$('#lb').classList.remove('on');else if($('#ov2').classList.contains('on'))$('#ov2').classList.remove('on');else if($('#ov').classList.contains('on'))closeModal()}});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;
+  if($('#lb').classList.contains('on'))$('#lb').classList.remove('on');
+  else if($('#ov2').classList.contains('on')){$('#ov2').classList.remove('on');editLid=null}
+  else if($('#ov').classList.contains('on')){if(MODE==='edit'&&!isNew)cancelEdit();else closeModal()}});
 
 /* ================= 側邊面板 ================= */
 let listFilter='',listSort='name',pipeStage='all';
@@ -749,7 +863,7 @@ $('#panel').addEventListener('click',e=>{
     if(d.act==='openC'){openCommunity(c.id,'listings');return}
     const l=c.listings.find(x=>x.id===d.lid);
     if(d.act==='mv'){l.stage=d.to;l.stageDate=todayStr();c.updatedAt=Date.now();persist();renderAll();toast(`「${l.address||'物件'}」已移至${stg(d.to).n}`)}
-    if(d.act==='lEdit'){openCommunity(c.id,'listings');startEditListing(l)}
+    if(d.act==='lEdit'){openCommunity(c.id,'listings');openListingForm(l.id)}
     if(d.act==='lDel'&&confirm('刪除此物件？')){c.listings=c.listings.filter(x=>x.id!==l.id);c.updatedAt=Date.now();persist();renderAll()}
     return}
   const ci=e.target.closest('.citem');if(ci){const c=S.communities.find(x=>x.id===ci.dataset.cid);map.setView([c.lat,c.lng],Math.max(map.getZoom(),17));closePanelMobile();openCommunity(c.id)}
@@ -759,7 +873,7 @@ $('#panel').addEventListener('change',e=>{if(e.target.id==='ls'){listSort=e.targ
 const isMobile=()=>matchMedia('(max-width:860px)').matches;
 function closePanelMobile(){if(isMobile())document.body.classList.remove('panel-open')}
 $('#btnPanel').onclick=()=>{if(isMobile())document.body.classList.toggle('panel-open');else{document.body.classList.toggle('panel-off');setTimeout(()=>map.invalidateSize(),50)}};
-function renderAll(){renderMarkers();renderPanel()}
+function renderAll(){renderMarkers();renderPanel();syncOpenView()}
 
 /* ================= 頂部按鈕 / 選單 ================= */
 $('#btnPin').onclick=()=>{closePanelMobile();placeTemp(map.getCenter())};
@@ -871,8 +985,8 @@ function rptOverview(cs){
   const s=cs.slice().sort((a,b)=>(b.avgPrice||0)-(a.avgPrice||0));const av=mean(cs.filter(c=>c.avgPrice>0).map(c=>+c.avgPrice));
   return `<section class="rpt-sec"><h2>全部社區總覽</h2>
   <div class="tot pb">全部社區平均成交均價　<b>${av!=null?f2(av):'—'}</b> 萬/坪<span style="color:#7d8a9c;font-size:12px">（${cs.filter(c=>c.avgPrice>0).length} 個有填均價的社區）</span></div>
-  <table><thead><tr><th>社區</th><th>道路</th><th class="n">屋齡</th><th>樓層</th><th>格局</th><th class="n">成交均價</th><th class="n">在售</th><th class="n">委託</th></tr></thead><tbody>
-  ${s.map(c=>`<tr><td><b>${esc(c.name)}</b><br><span style="color:#7d8a9c;font-size:11px">${esc(c.builder||'')}</span></td><td>${esc((c.roads||[]).join('、'))}</td><td class="n">${cAge(c)??'—'}</td><td>${c.floorsAbove??'-'}F/B${c.floorsBelow??0}</td><td>${roomsStr(c)||'—'}</td><td class="n"><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b></td><td class="n">${c.listings.length}</td><td class="n">${stageCount(c,'entrust')}</td></tr>`).join('')}
+  <table><thead><tr><th>社區</th><th>道路</th><th class="n">屋齡</th><th>樓層</th><th>格局</th><th class="n">成交均價</th><th class="n">在售均價</th><th class="n">在售</th><th class="n">委託</th></tr></thead><tbody>
+  ${s.map(c=>`<tr><td><b>${esc(c.name)}</b><br><span style="color:#7d8a9c;font-size:11px">${esc(c.builder||'')}</span></td><td>${esc((c.roads||[]).join('、'))}</td><td class="n">${cAge(c)??'—'}</td><td>${c.floorsAbove??'-'}F/B${c.floorsBelow??0}</td><td>${roomsStr(c)||'—'}</td><td class="n"><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b></td><td class="n">${listAvg(c)!=null?f2(listAvg(c)):'—'}</td><td class="n">${c.listings.length}</td><td class="n">${stageCount(c,'entrust')}</td></tr>`).join('')}
   </tbody></table></section>`;
 }
 function rptRoads(roads){
@@ -882,16 +996,17 @@ function rptRoads(roads){
   ${per.map(p=>`<tr><td><b>${esc(p.road)}</b></td><td class="n">${p.cs.length}</td><td class="n">${p.priced.length}</td><td class="n"><b>${p.avg!=null?f2(p.avg):'—'}</b></td></tr>`).join('')}</tbody></table>
   ${roads.length>1?`<div class="tot pb">所選 ${roads.length} 條道路合併平均　<b>${all.avg!=null?f2(all.avg):'—'}</b> 萬/坪<span style="color:#7d8a9c;font-size:12px">（${all.priced.length} 個社區，同社區跨多路只算一次）</span></div>`:''}
   ${per.map(p=>`<h3>${esc(p.road)}<span class="r">平均 ${p.avg!=null?f2(p.avg):'—'} 萬/坪</span></h3>
-    ${p.cs.length?`<table><thead><tr><th>社區</th><th>建商</th><th class="n">屋齡</th><th>樓層</th><th>格局</th><th class="n">成交均價</th><th class="n">在售</th></tr></thead><tbody>
-    ${p.cs.slice().sort((a,b)=>(b.avgPrice||0)-(a.avgPrice||0)).map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.builder||'—')}</td><td class="n">${cAge(c)??'—'}</td><td>${c.floorsAbove??'-'}F/B${c.floorsBelow??0}</td><td>${roomsStr(c)||'—'}</td><td class="n"><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b></td><td class="n">${c.listings.length}</td></tr>`).join('')}</tbody></table>`:'<div class="none">無社區</div>'}`).join('')}
+    ${p.cs.length?`<table><thead><tr><th>社區</th><th>建商</th><th class="n">屋齡</th><th>樓層</th><th>格局</th><th class="n">成交均價</th><th class="n">在售均價</th><th class="n">在售</th></tr></thead><tbody>
+    ${p.cs.slice().sort((a,b)=>(b.avgPrice||0)-(a.avgPrice||0)).map(c=>`<tr><td><b>${esc(c.name)}</b></td><td>${esc(c.builder||'—')}</td><td class="n">${cAge(c)??'—'}</td><td>${c.floorsAbove??'-'}F/B${c.floorsBelow??0}</td><td>${roomsStr(c)||'—'}</td><td class="n"><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b></td><td class="n">${listAvg(c)!=null?f2(listAvg(c)):'—'}</td><td class="n">${c.listings.length}</td></tr>`).join('')}</tbody></table>`:'<div class="none">無社區</div>'}`).join('')}
   </section>`;
 }
 function rptCommunity(c,P){
   const days=[...Array(14)].map((_,k)=>addDays(new Date(),k));
-  const age=cAge(c);
+  const age=cAge(c),la=listAvg(c),pls=(c.plans||[]).filter(p=>p.src);
   let h=`<section class="rpt-sec">
   <div class="r-head pb"><div class="r-t">${esc(c.name)}</div><div class="r-s">${esc(c.builder||'建商未填')}　｜　${esc(c.address||'地址未填')}</div>${(c.roads||[]).length?`<div class="r-roads">${c.roads.map(r=>`<span>${esc(r)}</span>`).join('')}</div>`:''}</div>
-  <div class="r-kpis pb"><div class="gold"><small>成交均價</small><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b> <small style="display:inline">萬/坪</small></div><div><small>屋齡</small><b>${age!=null?age+' 年':'—'}</b></div><div><small>樓層</small><b style="font-size:14px">${c.floorsAbove??'-'}F / B${c.floorsBelow??0}</b></div><div><small>總戶數</small><b>${c.households??'—'}</b></div><div><small>在售（募/追/委）</small><b style="font-size:14px">${c.listings.length}（${stageCount(c,'recruit')}/${stageCount(c,'track')}/${stageCount(c,'entrust')}）</b></div></div>
+  ${P.plans&&pls.length?`<div class="r-plans ${pls.length>1?'multi':''}">${pls.map(p=>`<div class="pb"><img src="${p.src}"></div>`).join('')}</div>`:''}
+  <div class="r-kpis pb"><div class="gold"><small>成交均價</small><b>${c.avgPrice>0?f1(+c.avgPrice):'—'}</b> <small style="display:inline">萬/坪</small></div><div class="sage"><small>在售均價</small><b>${la!=null?f2(la):'—'}</b> <small style="display:inline">萬/坪</small></div><div><small>屋齡</small><b>${age!=null?age+' 年':'—'}</b></div><div><small>樓層</small><b style="font-size:14px">${c.floorsAbove??'-'}F / B${c.floorsBelow??0}</b></div><div><small>總戶數</small><b>${c.households??'—'}</b></div><div><small>在售（募/追/委）</small><b style="font-size:14px">${c.listings.length}（${stageCount(c,'recruit')}/${stageCount(c,'track')}/${stageCount(c,'entrust')}）</b></div></div>
   <h3>格局配置</h3>${c.layouts.length?`<table><thead><tr><th>門號 / 戶別</th><th>格局</th><th class="n">坪數</th></tr></thead><tbody>${c.layouts.map(l=>`<tr><td>${esc(l.unit||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping!=null?f2(l.ping):'—'}</td></tr>`).join('')}</tbody></table>`:'<div class="none">尚無格局資料</div>'}`;
   if(P.staff){h+=`<h3>管理人員與班表（${ymd(days[0]).slice(5).replace('-','/')} 起 14 天）</h3>`;
     h+=c.staff.length?`<table class="sch"><thead><tr><th style="width:62px">職稱</th><th style="width:78px">姓名</th><th style="width:62px">班別</th>${days.map(d=>`<th class="d">${d.getMonth()+1}/${d.getDate()}<br>${WDS[d.getDay()]}</th>`).join('')}</tr></thead><tbody>
@@ -900,7 +1015,6 @@ function rptCommunity(c,P){
     h+=c.listings.length?`<table><thead><tr><th>階段</th><th>地址</th><th>樓層</th><th>格局</th><th class="n">坪數</th><th class="n">開價(萬)</th><th class="n">單價(萬/坪)</th><th>車位</th></tr></thead><tbody>
     ${STAGES.flatMap(st=>c.listings.filter(l=>l.stage===st.k).map(l=>{const up=unitPrice(l);return `<tr><td><span class="stg" style="background:${st.c}">${st.n}</span></td><td>${esc(l.address||'—')}${l.note?`<br><span style="color:#7d8a9c;font-size:11px">${esc(l.note)}</span>`:''}</td><td>${esc(l.floor||'—')}</td><td>${layoutStr(l)}</td><td class="n">${l.ping?f2(l.ping):'—'}</td><td class="n"><b>${l.price?fInt(l.price):'—'}</b></td><td class="n">${up?f2(up):'—'}</td><td>${esc(parkStr(l))}</td></tr>`})).join('')}</tbody></table>`:'<div class="none">目前無在售物件</div>'}
   if(c.note)h+=`<h3>備註</h3><div class="note pb">${esc(c.note)}</div>`;
-  if(P.plans&&c.plans.some(p=>p.src))h+=`<h3>社區平面圖</h3>`+c.plans.filter(p=>p.src).map(p=>`<div class="plan-img pb"><img src="${p.src}"><div>${esc(p.caption||'')}</div></div>`).join('');
   return h+`</section>`;
 }
 function waitImgs(el){return Promise.all([...el.querySelectorAll('img')].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r})))}
